@@ -1,0 +1,49 @@
+dc_name: hetzner
+inventory: datacenters/hetzner/inventory
+base_dir: config
+org_name: chaordic
+
+server_groups:
+  servers:
+    num: 3
+    instance_type: cx21
+    volumes: 
+    - name: "data_vol"
+      path: /opt/nomad_server_data
+      size: 20
+  clients:
+    num: 2
+    instance_type: cpx31
+
+# kill this
+cluster_config:
+  servers: 3 # 3 or 5
+  clients: 2
+  vault_servers: 2
+  separate_consul_servers: false
+
+cloud_provider_config:
+  internal_network_interface_name: ens10
+  sudo_user: root
+  allowed_ips:
+    - 85.4.84.201/32
+  provider: hetzner
+  provider_settings:
+    location: nbg1
+    ssh_keys:
+    - wille.faler@gmail.com
+    load_balancer: 
+      enabled: true
+      type: lb11
+      server_group: clients
+    resource_names:
+      base_server_name: nomad-srv
+      firewall_name: dev_firewall
+      network_name: dev_network
+
+
+
+
+
+
+

@@ -1,0 +1,40 @@
+dc_name: hetzner
+base_dir: config
+org_name: chaordic
+
+server_groups:
+  servers:
+    num: 3
+    instance_type: cx21
+    volumes: 
+    - name: "data_vol"
+      path: /opt/nomad_server_data
+      size: 20
+  clients:
+    num: 2
+    instance_type: cpx31
+
+ingress:
+  management_domain: venue.dev
+
+cloud_provider_config:
+  internal_network_interface_name: enp7s0 #ens10
+  sudo_user: root
+  sudo_dir: /root
+  provider: hetzner
+  # allowed_ips:
+  #   - 85.4.76.161/32
+  provider_settings:
+    location: fsn1
+    ssh_keys:
+    - wille.faler@gmail.com
+    load_balancer: 
+    - type: lb11
+      server_group: clients
+    ssl_certificate_ids:
+    - 1122373 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
+    resource_names:
+      base_server_name: venue
+      firewall_name: dev_firewall
+      network_name: dev_network
+
