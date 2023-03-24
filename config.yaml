@@ -12,6 +12,7 @@ server_groups:
       size: 20
   clients:
     num: 2
+    is_public: true
     instance_type: cpx31
 
 ingress:
