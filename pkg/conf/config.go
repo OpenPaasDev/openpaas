@@ -57,16 +57,10 @@ type HetznerResourceNames struct {
 }
 
 type HetznerSettings struct {
-	Location      string               `yaml:"location"`
-	SSHKeys       []string             `yaml:"ssh_keys"`
-	ResourceNames HetznerResourceNames `yaml:"resource_names"`
-	LoadBalancer  LoadBalancerSettings `yaml:"load_balancer"`
-}
-
-type LoadBalancerSettings struct {
-	Enabled      bool   `yaml:"enabled"`
-	InstanceType string `yaml:"type"`
-	ServerGroup  string `yaml:"server_group"`
+	Location         string               `yaml:"location"`
+	SSHKeys          []string             `yaml:"ssh_keys"`
+	ResourceNames    HetznerResourceNames `yaml:"resource_names"`
+	LoadBalancerType string               `yaml:"load_balancer_type"`
 }
 
 type TFVarsConfig struct {

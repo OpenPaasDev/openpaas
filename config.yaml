@@ -22,15 +22,13 @@ cloud_provider_config:
   sudo_user: root
   sudo_dir: /root
   provider: hetzner
-  # allowed_ips:
-  #   - 85.4.76.161/32
+  allowed_ips:
+    - 85.4.76.161/32
   provider_settings:
     location: fsn1
     ssh_keys:
     - wille.faler@gmail.com
-    load_balancer: 
-    - type: lb11
-      server_group: clients
+    load_balancer_type: lb11
     ssl_certificate_ids:
     - 1122373 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
     resource_names:

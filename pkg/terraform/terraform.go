@@ -4,9 +4,9 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/OpenPaasDev/core/pkg/conf"
 )
@@ -45,10 +45,12 @@ func GenerateTerraform(config *conf.Config) error {
 
 	err := tmpl.Execute(&buf, config)
 	if err != nil {
+		fmt.Println("err1")
 		return err
 	}
 	err = os.MkdirAll(filepath.Clean(filepath.Join(config.BaseDir, "terraform")), 0750)
 	if err != nil {
+		fmt.Println("err2")
 		return err
 	}
 	folder := filepath.Join(config.BaseDir, "terraform")
@@ -62,4 +64,5 @@ func GenerateTerraform(config *conf.Config) error {
 		return err
 	}
 	return nil
+
 }

@@ -3,7 +3,6 @@ module github.com/OpenPaasDev/core
 go 1.20
 
 require (
-	github.com/OpenPaaSDev/openpaas v0.0.0-20230217185120-313abb237503
 	github.com/hashicorp/hcl2 v0.0.0-20191002203319-fb75b3253c80
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/stretchr/testify v1.8.2

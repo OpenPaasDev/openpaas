@@ -1,6 +1,4 @@
 github.com/Microsoft/go-winio v0.4.16 h1:FtSW/jqD+l4ba5iPBj9CODVtgfYAD8w2wS923g/cFDk=
-github.com/OpenPaaSDev/openpaas v0.0.0-20230217185120-313abb237503 h1:v4pwbYv6J+IEqTCnOHqAxyMM6Ec9w35O2ky+BJQSRbM=
-github.com/OpenPaaSDev/openpaas v0.0.0-20230217185120-313abb237503/go.mod h1:+82XSC2fDOwR8TSIEemmH2g19zHtsngXNinFQLk2FLQ=
 github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 h1:YoJbenK9C67SkzkDfmQuVln04ygHj3vjZfd9FL+GmQQ=
 github.com/acomagu/bufpipe v1.0.3 h1:fxAGrHZTgQ9w5QqVItgzwj235/uYZYgbXitB+dLupOk=
 github.com/agext/levenshtein v1.2.1 h1:QmvMAjj2aEICytGiWzmxoE0x2KZvE0fvmqMOfy2tjT8=

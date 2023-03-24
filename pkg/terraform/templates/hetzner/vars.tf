@@ -3,48 +3,24 @@ variable "hcloud_token" {
   type = string
 }
 
-variable "server_count" {
-  type = number
-  default = {{.ClusterConfig.Servers}}
-}
-
-variable "consul_volume_size" {
-  type = number
-  default = {{.ClusterConfig.ConsulVolumeSize}}
-}
-
-variable "client_count" {
-  type = number
-  default = {{.ClusterConfig.Clients}}
-}
-
-variable "vault_count" {
-  type = number
-  default = {{.ClusterConfig.VaultServers}}
-}
-
-variable "separate_consul_servers"{
-  type = bool
-  default = {{.ClusterConfig.SeparateConsulServers}}
-}
-
-variable "client_volumes" {
+variable "server_groups" {
   type = list
-  default = [{{ range $key, $value := .ClusterConfig.ClientVolumes}}
+  default = [{{ range $key, $value := .ServerGroups}}
    {
-    name = "{{ $value.Name }}"
-    client = "{{ $value.Client}}"
-    path = "{{ $value.Path}}"
-    size = {{ $value.Size }}
+    name = "{{ $key }}"
+    instance_type = "{{ $value.InstanceType}}"
+    num = {{ $value.Num }}
+    volumes = [{{ range $key, $value := $value.Volumes}}
+     {
+      name = "{{ $value.Name }}"
+      path = "{{ $value.Path }}"
+      size = {{ $value.Size }}
+     },{{ end }}
+    ]
    },{{ end }}
   ]
 }
 
-
-variable "multi_instance_observability" {
-  type = bool
-  default = {{.ObservabilityConfig.MultiInstance}}
-}
 
 variable "ssh_keys" {
   type = list
@@ -94,20 +70,6 @@ variable "ssl_certificate_ids" {
   ]
 }
 
-variable "server_instance_type"{
-  type = string
-  default = "{{.CloudProviderConfig.ProviderSettings.server_instance_type}}"
-}
-
-variable "client_instance_type"{
-  type = string
-  default = "{{.CloudProviderConfig.ProviderSettings.client_instance_type}}"
-}
-
-variable "observability_instance_type"{
-  type = string
-  default = "{{.CloudProviderConfig.ProviderSettings.observability_instance_type}}"
-}
 variable "location"{
   type = string
   default = "{{.CloudProviderConfig.ProviderSettings.location}}"
