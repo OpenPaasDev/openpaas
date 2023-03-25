@@ -23,6 +23,7 @@ type ServerGroup struct {
 	InstanceType string   `yaml:"instance_type"`
 	Volumes      []Volume `yaml:"volumes"`
 	IsPublic     bool     `yaml:"is_public"`
+	Aliases      []string `yaml:"aliases"`
 }
 
 type Volume struct {

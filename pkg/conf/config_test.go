@@ -26,6 +26,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, 20, conf.ServerGroups["servers"].Volumes[0].Size)
 	assert.Equal(t, "data_vol", conf.ServerGroups["servers"].Volumes[0].Name)
 	assert.Equal(t, "/opt/nomad_server_data", conf.ServerGroups["servers"].Volumes[0].Path)
+	assert.Equal(t, []string{"consul"}, conf.ServerGroups["servers"].Aliases)
 
 }
 
@@ -40,13 +41,9 @@ func TestLoadProviderConfig(t *testing.T) {
 	hetzner := provider.ProviderConfig.(HetznerSettings)
 
 	expected := HetznerSettings{
-		SSHKeys:  []string{"wille.faler@gmail.com"},
-		Location: "nbg1",
-		LoadBalancer: LoadBalancerSettings{
-			Enabled:      true,
-			InstanceType: "lb11",
-			ServerGroup:  "clients",
-		},
+		SSHKeys:          []string{"wille.faler@gmail.com"},
+		Location:         "nbg1",
+		LoadBalancerType: "lb11",
 		ResourceNames: HetznerResourceNames{
 			BaseServerName: "nomad-srv",
 			FirewallName:   "dev_firewall",

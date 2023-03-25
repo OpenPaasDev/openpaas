@@ -11,6 +11,8 @@ server_groups:
     - name: "data_vol"
       path: /opt/nomad_server_data
       size: 20
+    aliases:
+      - consul
   clients:
     num: 2
     instance_type: cpx31
@@ -32,10 +34,7 @@ cloud_provider_config:
     location: nbg1
     ssh_keys:
     - wille.faler@gmail.com
-    load_balancer: 
-      enabled: true
-      type: lb11
-      server_group: clients
+    load_balancer_type: lb11 # lb11 or lb21
     resource_names:
       base_server_name: nomad-srv
       firewall_name: dev_firewall
