@@ -98,6 +98,12 @@ func LoadTFVarsConfig(config Config) (*TFVarsConfig, error) {
 		providerConfig = hetznerConfig
 	}
 
+	for _, group := range config.ServerGroups {
+		if group.Volumes == nil {
+			group.Volumes = []Volume{}
+		}
+	}
+
 	return &TFVarsConfig{
 		ServerGroups:   config.ServerGroups,
 		ProviderConfig: providerConfig,

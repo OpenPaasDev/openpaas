@@ -16,23 +16,36 @@ locals {
   # Common tags to be assigned to all resources
 
   groups = {
-    for i, value in var.server_groups:
-      value.name => {
-        count = value.num, 
-        subnet = "${i}", group = i, server_type = value.instance_type, is_public = value.is_public
-      }
+    for i, value in var.server_groups :
+    value.name => {
+      count  = value.num,
+      subnet = "${i}", group = i, server_type = value.instance_type, is_public = value.is_public,
+      volumes = value.volumes
+    }
   }
 
   servers = flatten([
     for name, value in local.groups : [
       for i in range(value.count) : {
-        group_name = name,
+        group_name  = name,
         private_ip  = "10.0.${value.subnet}.${i + 2}",
         name        = "${var.base_server_name}-${name}-${i + 1}",
         group       = value.group
         index       = i
-        is_public      = value.is_public
+        is_public   = value.is_public
         server_type = value.server_type
+        volumes     = value.volumes
+      }
+    ]
+  ])
+
+  volumes = flatten([
+    for i, value in local.servers : [
+      for j, vol in value.volumes : {
+        name = "${var.base_server_name}-${value.group_name}-${value.index + 1}-${j}-${vol.name}",
+        server = "${var.base_server_name}-${value.group_name}-${value.index + 1}",
+        path = vol.path,
+        size = vol.size
       }
     ]
   ])
@@ -111,16 +124,16 @@ resource "hcloud_server_network" "network_binding" {
 }
 
 
-# resource "hcloud_volume" "client_volumes" {
-#   for_each = { for entry in var.client_volumes : "${entry.name}" => entry.size }
-#   location = var.location
-#   name     = "${each.key}"
-#   size     = each.value
-#   format   = "ext4"
-#   depends_on = [
-#     hcloud_server.server_node 
-#   ]
-# }
+resource "hcloud_volume" "volumes" {
+  for_each = { for entry in local.volumes : "${entry.name}" => entry.size }
+  location = var.location
+  name     = "${each.key}"
+  size     = each.value
+  format   = "ext4"
+  depends_on = [
+    hcloud_server.server_node 
+  ]
+}
 
 # resource "hcloud_volume_attachment" "client_volumes" {
 #   for_each = { for index, entry in var.client_volumes : entry.name => entry.client }
@@ -138,7 +151,7 @@ resource "hcloud_load_balancer" "lb1" {
   name               = "lb1"
   load_balancer_type = var.load_balancer_type
   # network_zone       =  hcloud_network_subnet.network_subnet["consul"].network_zone
-  location           = var.location
+  location = var.location
   depends_on = [
     hcloud_server.server_node,
     hcloud_server_network.network_binding,
@@ -156,12 +169,12 @@ resource "hcloud_load_balancer_network" "srvnetwork" {
 }
 
 resource "hcloud_load_balancer_service" "load_balancer_service" {
-    load_balancer_id = hcloud_load_balancer.lb1.id
-    protocol         = "https"
-    destination_port = 80
-    http {
-      certificates = var.ssl_certificate_ids 
-    }
+  load_balancer_id = hcloud_load_balancer.lb1.id
+  protocol         = "https"
+  destination_port = 80
+  http {
+    certificates = var.ssl_certificate_ids
+  }
 }
 
 
@@ -179,12 +192,12 @@ resource "time_sleep" "wait" {
 
 
 resource "hcloud_load_balancer_target" "load_balancer_target" {
-  for_each = {for key, val in local.servers: val.index => val.name if val.is_public == true}
+  for_each         = { for key, val in local.servers : val.index => val.name if val.is_public == true }
   type             = "server"
   load_balancer_id = hcloud_load_balancer.lb1.id
   server_id        = hcloud_server.server_node[each.value].id
-  use_private_ip = true
-  depends_on = [time_sleep.wait]
+  use_private_ip   = true
+  depends_on       = [time_sleep.wait]
 }
 
 
@@ -192,13 +205,14 @@ output "servers" {
   value = flatten([
     for index, node in hcloud_server.server_node : [
       for server in local.servers :
-      {host = "${node.ipv4_address}", 
-        host_name = "${node.name}", 
+      { host       = "${node.ipv4_address}",
+        host_name  = "${node.name}",
         private_ip = "${server.private_ip}",
-        server_id = node.id
-        group = node.labels["group"]
+        server_id  = node.id
+        group      = node.labels["group"]
+        mounts     = []
       } if server.name == node.name
-    ] 
+    ]
   ])
 }
 
