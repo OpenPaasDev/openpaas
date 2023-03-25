@@ -38,7 +38,6 @@ locals {
   ])
 
   placement_groups = length(var.server_groups)
-  lb_num = var.server_groups[0].num + 1
 }
 
 resource "hcloud_network" "private_network" {
@@ -143,15 +142,14 @@ resource "hcloud_load_balancer" "lb1" {
   depends_on = [
     hcloud_server.server_node,
     hcloud_server_network.network_binding,
-    hcloud_network_subnet.network_subnet["client"],
-    hcloud_network_subnet.network_subnet["consul"],
+    hcloud_network_subnet.network_subnet,
   ]
 }
 
 resource "hcloud_load_balancer_network" "srvnetwork" {
   load_balancer_id = hcloud_load_balancer.lb1.id
   network_id       = hcloud_network.private_network.id
-  ip               = "10.0.0.${local.lb_num}" # max 5 consul servers, so 10.0.0.7 is free
+  ip               = "10.0.0.254" # max 5 consul servers, so 10.0.0.7 is free
   depends_on = [
     hcloud_network.private_network
   ]
@@ -174,7 +172,8 @@ resource "time_sleep" "wait" {
   depends_on = [
     hcloud_server.server_node,
     hcloud_server_network.network_binding,
-    hcloud_network_subnet.network_subnet["client"],
+    hcloud_network_subnet.network_subnet,
+    hcloud_load_balancer_network.srvnetwork
   ]
 }
 

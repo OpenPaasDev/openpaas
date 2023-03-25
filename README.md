@@ -5,6 +5,5 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 
 
 ## TODO
-- [ ] Fix Hetzner LB generation
 - [ ] Fix Volumes and volume attachment in Terraform
 - [ ] Correctly parse new format of Terraform outputs
