@@ -13,7 +13,6 @@ provider "hcloud" {
 }
 
 locals {
-  # Common tags to be assigned to all resources
 
   groups = {
     for i, value in var.server_groups :
@@ -43,7 +42,7 @@ locals {
     for i, value in local.servers : [
       for j, vol in value.volumes : {
         name = "${var.base_server_name}-${value.group_name}-${value.index + 1}-${j}-${vol.name}",
-        server = "${var.base_server_name}-${value.group_name}-${value.index + 1}",
+        server = "${value.name}",
         path = vol.path,
         size = vol.size
       }
@@ -135,16 +134,16 @@ resource "hcloud_volume" "volumes" {
   ]
 }
 
-# resource "hcloud_volume_attachment" "client_volumes" {
-#   for_each = { for index, entry in var.client_volumes : entry.name => entry.client }
-#   volume_id = hcloud_volume.client_volumes[each.key].id
-#   server_id = hcloud_server.server_node[each.value].id
-#   automount = true
+resource "hcloud_volume_attachment" "client_volumes" {
+  for_each = { for index, entry in local.volumes : entry.name => entry.server }
+  volume_id = hcloud_volume.volumes[each.key].id
+  server_id = hcloud_server.server_node[each.value].id
+  automount = true
 
-#   depends_on = [
-#     hcloud_volume.client_volumes 
-#   ]
-# }
+  depends_on = [
+    hcloud_volume.volumes 
+  ]
+}
 
 
 resource "hcloud_load_balancer" "lb1" {
