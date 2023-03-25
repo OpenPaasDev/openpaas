@@ -134,7 +134,7 @@ resource "hcloud_volume" "volumes" {
   ]
 }
 
-resource "hcloud_volume_attachment" "client_volumes" {
+resource "hcloud_volume_attachment" "volumes" {
   for_each = { for index, entry in local.volumes : entry.name => entry.server }
   volume_id = hcloud_volume.volumes[each.key].id
   server_id = hcloud_server.server_node[each.value].id
@@ -209,22 +209,20 @@ output "servers" {
         private_ip = "${server.private_ip}",
         server_id  = node.id
         group      = node.labels["group"]
-        mounts     = []
       } if server.name == node.name
     ]
   ])
 }
 
-# output "volumes" {
-#  value = flatten([
-#     for index, attachment in hcloud_volume_attachment.client_volumes : [
-#       for vol in var.client_volumes :
-#       {mount = "/mnt/HC_Volume_${attachment.volume_id}", 
-#       path = vol.path,
-#       name = vol.name,
-#       is_nomad = true,
-#       server_id = attachment.server_id} if hcloud_volume.client_volumes[index].name == vol.name
-#     ] 
-#   ])
-# }
+output "volumes" {
+ value = flatten([
+    for index, attachment in hcloud_volume_attachment.volumes : [
+      for vol in local.volumes :
+      {mount = "/mnt/HC_Volume_${attachment.volume_id}", 
+      path = vol.path,
+      name = vol.name,
+      server_id = attachment.server_id} if hcloud_volume.volumes[index].name == vol.name
+    ] 
+  ])
+}
 
