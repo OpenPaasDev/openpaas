@@ -5,5 +5,5 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 
 
 ## TODO
-- [ ] Correctly parse new format of Terraform outputs
-- [ ] Support server group aliases (use: can support multiple Ansible targets, in case servers are shared, for instance, running multiple services, such as Consul and Nomad on the same server group)
+- [ ] Terraform variables from environment
+- [ ] Generate "diff" inventory: take old TF output and new TF output, and generate a diff inventory
