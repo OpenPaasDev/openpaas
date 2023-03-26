@@ -45,12 +45,10 @@ func GenerateTerraform(config *conf.Config) error {
 
 	err := tmpl.Execute(&buf, config)
 	if err != nil {
-		fmt.Println("err1")
 		return err
 	}
 	err = os.MkdirAll(filepath.Clean(filepath.Join(config.BaseDir, "terraform")), 0750)
 	if err != nil {
-		fmt.Println("err2")
 		return err
 	}
 	folder := filepath.Join(config.BaseDir, "terraform")

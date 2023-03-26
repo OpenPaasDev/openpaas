@@ -1,7 +1,6 @@
 package terraform
 
 import (
-	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,17 +57,11 @@ func TestGenerateTerraform(t *testing.T) {
 		defaultVal cty.Value
 	}{
 		{name: "hcloud_token", tpe: "string", defaultVal: cty.NullVal(cty.String)},
-		{name: "server_count", tpe: "number", defaultVal: cty.NumberVal(big.NewFloat(3))},
-		{name: "client_count", tpe: "number", defaultVal: cty.NumberVal(big.NewFloat(2))},
-		{name: "vault_count", tpe: "number", defaultVal: cty.NumberVal(big.NewFloat(2))},
-		{name: "separate_consul_servers", tpe: "bool", defaultVal: cty.BoolVal(false)},
-		{name: "multi_instance_observability", tpe: "bool", defaultVal: cty.BoolVal(false)},
 		{name: "ssh_keys", tpe: "list", defaultVal: cty.TupleVal([]cty.Value{cty.StringVal("wille.faler@gmail.com")})},
 		{name: "base_server_name", tpe: "string", defaultVal: cty.StringVal("nomad-srv")},
 		{name: "firewall_name", tpe: "string", defaultVal: cty.StringVal("dev_firewall")},
 		{name: "network_name", tpe: "string", defaultVal: cty.StringVal("dev_network")},
 		{name: "allow_ips", tpe: "list", defaultVal: cty.TupleVal([]cty.Value{cty.StringVal("85.4.84.201/32")})},
-		{name: "server_instance_type", tpe: "string", defaultVal: cty.StringVal("cx21")},
 		{name: "location", tpe: "string", defaultVal: cty.StringVal("nbg1")},
 	}
 

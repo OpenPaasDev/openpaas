@@ -27,9 +27,10 @@ type ServerGroup struct {
 }
 
 type Volume struct {
-	Name string `yaml:"name"`
-	Path string `yaml:"path"`
-	Size int    `yaml:"size"`
+	Name  string `yaml:"name"`
+	Path  string `yaml:"path"`
+	Size  int    `yaml:"size"`
+	Owner string `yaml:"owner"`
 }
 
 type IngressConfig struct {

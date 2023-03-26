@@ -40,10 +40,8 @@ func Exec(env Environment, command string, stdOut io.Writer) error {
 	}
 	runCmd = runCmd + command
 
-	fmt.Println(runCmd)
-
 	cmd := exec.Command("/bin/sh", "-c", runCmd)
-	fmt.Println(env.WorkingDir())
+
 	if env.WorkingDir() != "" {
 		cmd.Dir = env.WorkingDir()
 	}
@@ -76,7 +74,6 @@ func HasDependencies() bool {
 	if runtime.GOOS == "darwin" {
 		err := Exec(&EmptyEnv{}, "which openssl", &b)
 		if err != nil {
-			fmt.Println("openssl not present")
 			fmt.Println(err)
 			return false
 		}

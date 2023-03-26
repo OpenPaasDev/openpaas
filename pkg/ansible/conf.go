@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/OpenPaasDev/core/pkg/conf"
 	"gopkg.in/yaml.v3"
@@ -16,9 +17,8 @@ type Inventory struct {
 }
 
 type InventoryJson struct {
-	Servers       map[string]HostValues `json:"servers"`
-	ConsulVolumes Volumes               `json:"consul_volumes"`
-	ClientVolumes Volumes               `json:"client_volumes"`
+	Servers HostValues `json:"servers"`
+	Volumes Volumes    `json:"volumes"`
 }
 type Volumes struct {
 	Value []Volume `json:"value"`
@@ -36,6 +36,7 @@ type HostValues struct {
 }
 
 type Host struct {
+	Group     string `json:"group"`
 	Host      string `json:"host"`
 	HostName  string `json:"host_name"`
 	PrivateIP string `json:"private_ip"`
@@ -52,7 +53,9 @@ type HostGroup struct {
 
 type AnsibleHost struct {
 	PrivateIP string            `yaml:"private_ip"`
+	PublicIP  string            `yaml:"public_ip"`
 	HostName  string            `yaml:"host_name"`
+	ID        string            `yaml:"id"`
 	Mounts    []Mount           `yaml:"mounts"`
 	ExtraVars map[string]string `yaml:"extra_vars"`
 }
@@ -154,27 +157,46 @@ func GenerateInventory(config *conf.Config) (*Inventory, error) {
 		},
 	}
 
-	for k, v := range inventory.Servers {
-		inv.All.Children[k] = HostGroup{Hosts: make(map[string]AnsibleHost)}
-		for _, host := range v.Value {
-			mounts := []Mount{}
-			for _, vol := range inventory.ClientVolumes.Value {
-				if fmt.Sprintf("%v", vol.ServerID) == host.ServerID {
-					mounts = append(mounts, Mount{
-						Name:      vol.Name,
-						Path:      vol.Path,
-						MountPath: vol.Mount,
-						Owner:     config.CloudProviderConfig.User,
-					})
+	for _, v := range inventory.Servers.Value {
+		if _, ok := inv.All.Children[v.Group]; !ok {
+			inv.All.Children[v.Group] = HostGroup{Hosts: make(map[string]AnsibleHost)}
+		}
+
+		volumes := []Mount{}
+		for _, volume := range inventory.Volumes.Value {
+			if fmt.Sprintf("%v", volume.ServerID) == v.ServerID {
+				owner := "root"
+				for _, vol := range config.ServerGroups[v.Group].Volumes {
+					if strings.HasSuffix(volume.Name, vol.Name) {
+						owner = vol.Owner
+					}
 				}
+
+				volumes = append(volumes, Mount{
+					Name:      volume.Name,
+					Path:      volume.Path,
+					MountPath: volume.Mount,
+					Owner:     owner,
+				})
 			}
 
-			inv.All.Children[k].Hosts[host.Host] = AnsibleHost{
-				PrivateIP: host.PrivateIP,
-				HostName:  host.HostName,
-				Mounts:    mounts,
-			}
 		}
+		inv.All.Children[v.Group].Hosts[v.Host] = AnsibleHost{
+			HostName:  v.HostName,
+			PrivateIP: v.PrivateIP,
+			PublicIP:  v.Host,
+			Mounts:    volumes,
+			ID:        v.ServerID,
+			ExtraVars: map[string]string{
+				"datacenter": config.DC,
+			},
+		}
+
+		for _, alias := range config.ServerGroups[v.Group].Aliases {
+			inv.All.Children[alias] = HostGroup{Hosts: make(map[string]AnsibleHost)}
+			inv.All.Children[alias] = inv.All.Children[v.Group]
+		}
+		// also map mounts
 	}
 
 	bytes, err := yaml.Marshal(inv)

@@ -10,6 +10,7 @@ server_groups:
     - name: "data_vol"
       path: /opt/nomad_server_data
       size: 20
+      owner: root
   clients:
     num: 2
     is_public: true
