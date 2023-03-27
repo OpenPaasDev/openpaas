@@ -138,7 +138,9 @@ func GenerateInventory(config *conf.Config) (*Inventory, error) {
 	}
 	defer func() {
 		e := jsonFile.Close()
-		fmt.Println(e)
+		if e != nil {
+			panic(e)
+		}
 	}()
 	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {

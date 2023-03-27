@@ -3,7 +3,6 @@ package util
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -40,7 +39,9 @@ func GetPublicIP(ctx context.Context) (string, error) {
 	}
 	defer func() {
 		e := resp.Body.Close()
-		fmt.Println(e)
+		if e != nil {
+			panic(e)
+		}
 	}()
 
 	body, err := io.ReadAll(resp.Body)

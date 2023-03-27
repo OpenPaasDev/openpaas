@@ -10,7 +10,7 @@ server_groups:
     - name: "data_vol"
       path: /opt/nomad_server_data
       size: 20
-      owner: root
+      owner: www-data
   clients:
     num: 2
     is_public: true
@@ -37,4 +37,3 @@ cloud_provider_config:
       base_server_name: venue
       firewall_name: dev_firewall
       network_name: dev_network
-

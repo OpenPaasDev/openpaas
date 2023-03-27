@@ -74,7 +74,6 @@ func HasDependencies() bool {
 	if runtime.GOOS == "darwin" {
 		err := Exec(&EmptyEnv{}, "which openssl", &b)
 		if err != nil {
-			fmt.Println(err)
 			return false
 		}
 		if strings.Contains(b.String(), "/usr/bin/openssl") {
