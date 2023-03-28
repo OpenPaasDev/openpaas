@@ -93,7 +93,7 @@ resource "hcloud_firewall" "network_firewall" {
   rule {
     direction  = "in"
     protocol   = "tcp"
-    port       = "1-10000"
+    port       = "any"
     source_ips = flatten([
       for index, node in hcloud_server.server_node : [
         "${node.ipv4_address}/32"
@@ -104,7 +104,7 @@ resource "hcloud_firewall" "network_firewall" {
   rule {
     direction  = "in"
     protocol   = "udp"
-    port       = "1-60000"
+    port       = "any"
     source_ips = flatten([
       for index, node in hcloud_server.server_node : [
         "${node.ipv4_address}/32"
