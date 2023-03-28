@@ -5,15 +5,16 @@ org_name: chaordic
 server_groups:
   servers:
     num: 3
+    # http_enabled: true
     instance_type: cx21
-    volumes: 
-    - name: "data_vol"
-      path: /opt/nomad_server_data
-      size: 20
-      owner: www-data
+    # volumes: 
+    # - name: "data_vol"
+    #   path: /opt/nomad_server_data
+    #   size: 20
+    #   owner: www-data
   clients:
     num: 2
-    is_public: true
+    http_enabled: true
     instance_type: cpx31
 
 ingress:
@@ -25,7 +26,9 @@ cloud_provider_config:
   sudo_dir: /root
   provider: hetzner
   allowed_ips:
-    - 85.4.76.161/32
+    - 188.60.153.202/32
+    - 10.42.0.0/16
+    - 10.43.0.0/16
   provider_settings:
     location: fsn1
     ssh_keys:

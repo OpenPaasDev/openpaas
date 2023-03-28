@@ -18,7 +18,7 @@ locals {
     for i, value in var.server_groups :
     value.name => {
       count  = value.num,
-      subnet = "${i}", group = i, server_type = value.instance_type, is_public = value.is_public,
+      subnet = "${i}", group = i, server_type = value.instance_type, http_enabled = value.http_enabled,
       volumes = value.volumes
     }
   }
@@ -31,7 +31,7 @@ locals {
         name        = "${var.base_server_name}-${name}-${i + 1}",
         group       = value.group
         index       = i
-        is_public   = value.is_public
+        http_enabled   = value.http_enabled
         server_type = value.server_type
         volumes     = value.volumes
       }
@@ -89,6 +89,41 @@ resource "hcloud_firewall" "network_firewall" {
       "::/0"
     ]
   }
+
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "1-10000"
+    source_ips = flatten([
+      for index, node in hcloud_server.server_node : [
+        "${node.ipv4_address}/32"
+      ]
+    ])
+  }
+
+  rule {
+    direction  = "in"
+    protocol   = "udp"
+    port       = "1-60000"
+    source_ips = flatten([
+      for index, node in hcloud_server.server_node : [
+        "${node.ipv4_address}/32"
+      ]
+    ])
+  }
+
+  depends_on = [
+    hcloud_server.server_node,
+  ]
+}
+
+resource "hcloud_firewall_attachment" "fw_ref" {
+    firewall_id = hcloud_firewall.network_firewall.id
+    server_ids  = flatten([
+      for index, node in hcloud_server.server_node : [
+        node.id
+      ]
+    ])
 }
 
 resource "hcloud_server" "server_node" {
@@ -98,7 +133,6 @@ resource "hcloud_server" "server_node" {
   server_type        = each.value.server_type
   location           = var.location
   placement_group_id = hcloud_placement_group.placement_group[each.value.group].id
-  firewall_ids       = [hcloud_firewall.network_firewall.id]
 
   public_net {
     ipv4_enabled = true
@@ -180,7 +214,7 @@ resource "hcloud_load_balancer_service" "load_balancer_service" {
 # # this is unfortunately necessary, because no amount of `depends_on` on the load_balancer_target will ensure
 # # the nodes and networks are ready for load_balancer target attachment, other than waiting
 resource "time_sleep" "wait" {
-  create_duration = "30s"
+  create_duration = "5s"
   depends_on = [
     hcloud_server.server_node,
     hcloud_server_network.network_binding,
@@ -191,7 +225,7 @@ resource "time_sleep" "wait" {
 
 
 resource "hcloud_load_balancer_target" "load_balancer_target" {
-  for_each         = { for key, val in local.servers : val.index => val.name if val.is_public == true }
+  for_each         = { for key, val in local.servers : val.index => val.name if val.http_enabled == true }
   type             = "server"
   load_balancer_id = hcloud_load_balancer.lb1.id
   server_id        = hcloud_server.server_node[each.value].id

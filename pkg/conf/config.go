@@ -22,7 +22,7 @@ type ServerGroup struct {
 	Num          int      `yaml:"num"`
 	InstanceType string   `yaml:"instance_type"`
 	Volumes      []Volume `yaml:"volumes"`
-	IsPublic     bool     `yaml:"is_public"`
+	HttpEnabled  bool     `yaml:"http_enabled"`
 	Aliases      []string `yaml:"aliases"`
 }
 
