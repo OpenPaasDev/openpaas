@@ -24,6 +24,7 @@ cloud_provider_config:
   internal_network_interface_name: enp7s0 #ens10
   sudo_user: root
   sudo_dir: /root
+  ssh_key: /Users/wfaler/.ssh/id_rsa
   provider: hetzner
   allowed_ips:
     - 188.60.153.202/32

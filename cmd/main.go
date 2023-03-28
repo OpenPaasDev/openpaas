@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+
+	ssh "github.com/helloyi/go-sshclient"
 
 	"github.com/OpenPaasDev/core/pkg/ansible"
 	"github.com/OpenPaasDev/core/pkg/conf"
@@ -50,8 +53,27 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	_, err = ansible.GenerateInventory(cnf)
+	inventory, err := ansible.GenerateInventory(cnf)
 	if err != nil {
 		panic(err)
 	}
+
+	serverIps := []string{}
+	for k := range inventory.All.Children["servers"].Hosts {
+		serverIps = append(serverIps, k)
+	}
+
+	fmt.Println(fmt.Sprintf("%s:22", serverIps[0]))
+	client, err := ssh.DialWithKey(fmt.Sprintf("%s:22", serverIps[0]), cnf.CloudProviderConfig.User, cnf.CloudProviderConfig.SSHKey)
+	if err != nil {
+		panic(err)
+	}
+	script := client.Cmd("sudo apt-get update").Cmd("sudo apt-get upgrade -y")
+	script.SetStdio(os.Stdout, os.Stderr)
+	err = script.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	defer client.Close()
 }
