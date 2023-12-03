@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	ssh "github.com/helloyi/go-sshclient"
 
@@ -58,22 +59,36 @@ func main() {
 		panic(err)
 	}
 
+	// TODO this is running stuff on the servers
+
 	serverIps := []string{}
 	for k := range inventory.All.Children["servers"].Hosts {
 		serverIps = append(serverIps, k)
 	}
-
-	fmt.Println(fmt.Sprintf("%s:22", serverIps[0]))
-	client, err := ssh.DialWithKey(fmt.Sprintf("%s:22", serverIps[0]), cnf.CloudProviderConfig.User, cnf.CloudProviderConfig.SSHKey)
-	if err != nil {
-		panic(err)
-	}
-	script := client.Cmd("sudo apt-get update").Cmd("sudo apt-get upgrade -y")
-	script.SetStdio(os.Stdout, os.Stderr)
-	err = script.Run()
-	if err != nil {
-		panic(err)
+	clients := []string{}
+	for k := range inventory.All.Children["clients"].Hosts {
+		clients = append(clients, k)
 	}
 
-	defer client.Close()
+	var wg sync.WaitGroup
+	for _, ip := range serverIps {
+		wg.Add(1)
+		fmt.Println(fmt.Sprintf("%s:22", ip))
+		go func(ip string) {
+			client, err := ssh.DialWithKey(fmt.Sprintf("%s:22", ip), cnf.CloudProviderConfig.User, cnf.CloudProviderConfig.SSHKey)
+			defer client.Close() //nolint
+			if err != nil {
+				panic(err)
+			}
+			script := client.Cmd("sudo apt-get update").Cmd("sudo apt-get upgrade -y")
+			script.SetStdio(os.Stdout, os.Stderr)
+			err = script.Run()
+			if err != nil {
+				fmt.Println(err)
+			}
+			wg.Done()
+		}(ip)
+	}
+	wg.Wait()
+
 }
