@@ -2,7 +2,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.34.3"
+      version = "1.44.1"
     }
   }
 }
@@ -214,7 +214,7 @@ resource "hcloud_load_balancer_service" "load_balancer_service" {
 # # this is unfortunately necessary, because no amount of `depends_on` on the load_balancer_target will ensure
 # # the nodes and networks are ready for load_balancer target attachment, other than waiting
 resource "time_sleep" "wait" {
-  create_duration = "5s"
+  create_duration = "2s"
   depends_on = [
     hcloud_server.server_node,
     hcloud_server_network.network_binding,

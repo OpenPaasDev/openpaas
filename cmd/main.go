@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
+
+	ssh "github.com/helloyi/go-sshclient"
 
 	"github.com/OpenPaasDev/core/pkg/ansible"
 	"github.com/OpenPaasDev/core/pkg/conf"
@@ -50,8 +54,39 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	_, err = ansible.GenerateInventory(cnf)
+	inventory, err := ansible.GenerateInventory(cnf)
 	if err != nil {
 		panic(err)
 	}
+
+	// TODO this is running stuff on the servers
+
+	serverIps := []string{}
+	for k := range inventory.All.Children {
+		for _, v := range inventory.All.Children[k].Hosts {
+			serverIps = append(serverIps, v.PublicIP)
+		}
+	}
+
+	var wg sync.WaitGroup
+	for _, ip := range serverIps {
+		wg.Add(1)
+		fmt.Println(fmt.Sprintf("%s:22", ip))
+		go func(ip string) {
+			client, err := ssh.DialWithKey(fmt.Sprintf("%s:22", ip), cnf.CloudProviderConfig.User, cnf.CloudProviderConfig.SSHKey)
+			defer client.Close() //nolint
+			if err != nil {
+				panic(err)
+			}
+			script := client.Cmd("sudo apt-get update").Cmd("sudo apt-get upgrade -y")
+			script.SetStdio(os.Stdout, os.Stderr)
+			err = script.Run()
+			if err != nil {
+				fmt.Println(err)
+			}
+			wg.Done()
+		}(ip)
+	}
+	wg.Wait()
+
 }

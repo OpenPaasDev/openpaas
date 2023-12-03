@@ -51,6 +51,7 @@ type CloudProvider struct {
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`
+	SSHKey           string                 `yaml:"ssh_key"`
 }
 
 type HetznerResourceNames struct {

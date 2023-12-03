@@ -5,7 +5,7 @@ org_name: chaordic
 server_groups:
   servers:
     num: 3
-    # http_enabled: true
+    http_enabled: false
     instance_type: cx21
     # volumes: 
     # - name: "data_vol"
@@ -15,7 +15,7 @@ server_groups:
   clients:
     num: 2
     http_enabled: true
-    instance_type: cpx31
+    instance_type: cx21
 
 ingress:
   management_domain: venue.dev
@@ -24,15 +24,16 @@ cloud_provider_config:
   internal_network_interface_name: enp7s0 #ens10
   sudo_user: root
   sudo_dir: /root
+  ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
   allowed_ips:
-    - 188.60.153.202/32
+    - 178.194.90.93/32
     - 10.42.0.0/16
     - 10.43.0.0/16
   provider_settings:
     location: fsn1
     ssh_keys:
-    - wille.faler@gmail.com
+    - wfaler@chaordic.io
     load_balancer_type: lb11
     ssl_certificate_ids:
     - 1122373 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
