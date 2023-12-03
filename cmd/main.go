@@ -62,12 +62,10 @@ func main() {
 	// TODO this is running stuff on the servers
 
 	serverIps := []string{}
-	for k := range inventory.All.Children["servers"].Hosts {
-		serverIps = append(serverIps, k)
-	}
-	clients := []string{}
-	for k := range inventory.All.Children["clients"].Hosts {
-		clients = append(clients, k)
+	for k := range inventory.All.Children {
+		for _, v := range inventory.All.Children[k].Hosts {
+			serverIps = append(serverIps, v.PublicIP)
+		}
 	}
 
 	var wg sync.WaitGroup
