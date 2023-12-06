@@ -16,7 +16,6 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, "config", conf.BaseDir)
 	assert.Equal(t, "hetzner", conf.DC)
-	assert.Equal(t, "ens10", conf.CloudProviderConfig.NetworkInterface)
 	assert.Equal(t, "root", conf.CloudProviderConfig.User)
 	assert.Equal(t, "hetzner", conf.CloudProviderConfig.Provider)
 

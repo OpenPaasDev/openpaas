@@ -14,8 +14,8 @@ type Config struct {
 	BaseDir             string                 `yaml:"base_dir"`
 	OrgName             string                 `yaml:"org_name"`
 	CloudProviderConfig CloudProvider          `yaml:"cloud_provider_config"`
-	IngressConfig       IngressConfig          `yaml:"ingress"`
 	ServerGroups        map[string]ServerGroup `yaml:"server_groups"`
+	Services            map[string]interface{} `yaml:"services"`
 }
 
 type ServerGroup struct {
@@ -33,10 +33,6 @@ type Volume struct {
 	Owner string `yaml:"owner"`
 }
 
-type IngressConfig struct {
-	ManagementDomain string `yaml:"management_domain"`
-}
-
 type ClientVolume struct {
 	Name   string `yaml:"name"`
 	Client string `yaml:"client"`
@@ -47,7 +43,6 @@ type ClientVolume struct {
 type CloudProvider struct {
 	User             string                 `yaml:"sudo_user"`
 	Dir              string                 `yaml:"sudo_dir"`
-	NetworkInterface string                 `yaml:"internal_network_interface_name"`
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`

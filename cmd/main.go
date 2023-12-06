@@ -59,8 +59,6 @@ func main() {
 		panic(err)
 	}
 
-	// TODO this is running stuff on the servers
-
 	serverIps := []string{}
 	for k := range inventory.All.Children {
 		for _, v := range inventory.All.Children[k].Hosts {
