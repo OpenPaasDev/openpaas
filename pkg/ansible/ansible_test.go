@@ -5,14 +5,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAnsible(t *testing.T) {
 	currentUser, err := user.Current()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	ansibleClient := NewClient(filepath.Join("testdata", "inventory"), filepath.Join("testdata", "secrets"), currentUser.Username, filepath.Join("testdata", "secrets"))
 	err = ansibleClient.Run(filepath.Join("testdata", "ansible.yml"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

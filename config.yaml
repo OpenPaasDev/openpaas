@@ -3,25 +3,31 @@ base_dir: config
 org_name: chaordic
 
 server_groups:
-  servers:
+  server:
     num: 3
     http_enabled: false
     instance_type: cx21
-    # volumes: 
-    # - name: "data_vol"
-    #   path: /opt/nomad_server_data
-    #   size: 20
-    #   owner: www-data
-  clients:
+ #   volumes: 
+ #   - name: "data_vol"
+ #     path: /opt/nomad_server_data
+ #     size: 20
+ #     owner: www-data
+  agent:
     num: 2
-    http_enabled: true
+    http_enabled: true # should probably be is_lb_target instead, more natural
     instance_type: cx21
 
-ingress:
-  management_domain: venue.dev
+providers:
+  - name: k3s
+    config:
+      server_group: server
+      agent_group: agent
+      internal_network_interface_name: ens10 
+  - name: ansible
+    config:
+      folder: playbooks
 
 cloud_provider_config:
-  internal_network_interface_name: enp7s0 #ens10
   sudo_user: root
   sudo_dir: /root
   ssh_key: /home/wfaler/.ssh/id_rsa
@@ -36,8 +42,8 @@ cloud_provider_config:
     - wfaler@chaordic.io
     load_balancer_type: lb11
     ssl_certificate_ids:
-    - 1122373 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
+    - 2332582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
     resource_names:
-      base_server_name: venue
-      firewall_name: dev_firewall
-      network_name: dev_network
+      base_server_name: prod
+      firewall_name: prod_firewall
+      network_name: prod_network
