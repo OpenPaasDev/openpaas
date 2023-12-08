@@ -29,10 +29,10 @@ providers:
     config:
       groups:
       - name: bootstrap
-        lifecycle: on-start
+        lifecycle: bootstrap 
         folder: bootstrap_playbooks
       - name: sync
-        lifecycle: always
+        lifecycle: always 
         folder: playbooks
 
 cloud_provider_config:

@@ -12,6 +12,8 @@ import (
 
 	"github.com/OpenPaasDev/core/pkg/ansible"
 	"github.com/OpenPaasDev/core/pkg/conf"
+	"github.com/OpenPaasDev/core/pkg/provider"
+	"github.com/OpenPaasDev/core/pkg/state"
 	"github.com/OpenPaasDev/core/pkg/terraform"
 )
 
@@ -35,14 +37,76 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand()
-
-	ctx := context.Background()
-	cnf, inventory, err := initStack(ctx, "config.yaml")
-	if err != nil {
-		panic(err)
+	rootCmd.AddCommand(bootstrap(), syncCmd())
+}
+func syncCmd() *cobra.Command {
+	var configFile string
+	cmd := &cobra.Command{
+		Use:   "sync",
+		Short: "Sync your platform",
+		Long:  `Sync the platform`,
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+			cnf, inv, err := initStack(ctx, configFile)
+			if err != nil {
+				panic(err)
+			}
+			d := state.Init(cnf.BaseDir)
+			err = state.Migrate(d)
+			if err != nil {
+				panic(err)
+			}
+			err = provider.RunAll(ctx, cnf, inv)
+			if err != nil {
+				panic(err)
+			}
+		},
 	}
-	updateNodes(cnf, inventory)
+
+	addFlags(cmd, &configFile)
+
+	return cmd
+}
+
+func bootstrap() *cobra.Command {
+	var configFile string
+	cmd := &cobra.Command{
+		Use:   "bootstrap",
+		Short: "Bootstrap your platform",
+		Long:  `bootstrap the platform`,
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+			cnf, inv, err := initStack(ctx, configFile)
+			if err != nil {
+				panic(err)
+			}
+			updateNodes(cnf, inv)
+			d := state.Init(cnf.BaseDir)
+			err = state.Migrate(d)
+			if err != nil {
+				panic(err)
+			}
+
+			err = provider.RunAll(ctx, cnf, inv)
+			if err != nil {
+				panic(err)
+			}
+		},
+	}
+
+	addFlags(cmd, &configFile)
+
+	return cmd
+}
+
+func addFlags(cmd *cobra.Command, file *string) {
+	cmd.Flags().StringVarP(file, "config.file", "f", "", "configuration file")
+
+	err := cmd.MarkFlagRequired("config.file")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Inventory, error) {
