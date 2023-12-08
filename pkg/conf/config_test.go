@@ -30,6 +30,15 @@ func TestLoadConfig(t *testing.T) {
 
 }
 
+func TestLoadProviders(t *testing.T) {
+	conf, err := Load(filepath.Join("..", "testdata", "config.yaml"))
+	require.NoError(t, err)
+	assert.NotNil(t, conf)
+	fmt.Println(conf)
+
+	assert.Len(t, conf.Providers, 2)
+}
+
 func TestLoadProviderConfig(t *testing.T) {
 	conf, err := Load(filepath.Join("..", "testdata", "config.yaml"))
 	require.NoError(t, err)

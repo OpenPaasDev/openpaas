@@ -33,10 +33,16 @@ CREATE TABLE IF NOT EXISTS mounts(
 		FOREIGN KEY(server_id) REFERENCES servers(id)
 	);
 
+CREATE TABLE IF NOT EXISTS k3s_clusters(
+	id TEXT PRIMARY KEY
+	);
+
 CREATE TABLE IF NOT EXISTS k3s_members(
 		id TEXT PRIMARY KEY,
 		server_id TEXT,
 		state TEXT,
 		role TEXT, -- server or agent
-		FOREIGN KEY(id) REFERENCES servers(id)
+		cluster_id TEXT,
+		FOREIGN KEY(id) REFERENCES servers(id),
+		FOREIGN KEY(cluster_id) REFERENCES k3s_clusters(id)
 	);

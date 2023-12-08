@@ -5,7 +5,7 @@ org_name: chaordic
 server_groups:
   server:
     num: 3
-    http_enabled: false
+    lb_target: false
     instance_type: cx21
  #   volumes: 
  #   - name: "data_vol"
@@ -14,18 +14,26 @@ server_groups:
  #     owner: www-data
   agent:
     num: 2
-    http_enabled: true # should probably be is_lb_target instead, more natural
+    lb_target: true # should probably be is_lb_target instead, more natural
     instance_type: cx21
 
 providers:
   - name: k3s
     config:
+      cluster_name: k8s
       server_group: server
-      agent_group: agent
+      agent_groups: 
+      - agent
       internal_network_interface_name: ens10 
   - name: ansible
     config:
-      folder: playbooks
+      groups:
+      - name: bootstrap
+        lifecycle: on-start
+        folder: bootstrap_playbooks
+      - name: sync
+        lifecycle: always
+        folder: playbooks
 
 cloud_provider_config:
   sudo_user: root
@@ -42,7 +50,7 @@ cloud_provider_config:
     - wfaler@chaordic.io
     load_balancer_type: lb11
     ssl_certificate_ids:
-    - 2332582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
+    - 1232582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
     resource_names:
       base_server_name: prod
       firewall_name: prod_firewall

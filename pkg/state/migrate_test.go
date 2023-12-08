@@ -9,13 +9,13 @@ import (
 )
 
 func Test_Migrate(t *testing.T) {
-	err := os.MkdirAll("testdata", 0650)
+	err := os.MkdirAll("testdata", 0755)
 	defer func() {
 		e := os.Remove(filepath.Join("testdata", "state.db"))
 		require.NoError(t, e)
 	}()
 	require.NoError(t, err)
-	err = Migrate("testdata")
+	err = Migrate(Init("testdata"))
 	require.NoError(t, err)
 
 }

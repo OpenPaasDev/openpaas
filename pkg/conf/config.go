@@ -13,16 +13,22 @@ type Config struct {
 	DC                  string                 `yaml:"dc_name"`
 	BaseDir             string                 `yaml:"base_dir"`
 	OrgName             string                 `yaml:"org_name"`
+	Providers           []ProviderConfig       `yaml:"providers"`
 	CloudProviderConfig CloudProvider          `yaml:"cloud_provider_config"`
 	ServerGroups        map[string]ServerGroup `yaml:"server_groups"`
 	Services            map[string]interface{} `yaml:"services"`
+}
+
+type ProviderConfig struct {
+	Name   string                 `yaml:"name"`
+	Config map[string]interface{} `yaml:"config"`
 }
 
 type ServerGroup struct {
 	Num          int      `yaml:"num"`
 	InstanceType string   `yaml:"instance_type"`
 	Volumes      []Volume `yaml:"volumes"`
-	HttpEnabled  bool     `yaml:"http_enabled"`
+	LbTarget     bool     `yaml:"lb_target"`
 	Aliases      []string `yaml:"aliases"`
 }
 

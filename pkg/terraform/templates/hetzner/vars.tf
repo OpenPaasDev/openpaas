@@ -10,7 +10,7 @@ variable "server_groups" {
     name = "{{ $key }}"
     instance_type = "{{ $value.InstanceType}}"
     num = {{ $value.Num }}
-    http_enabled = {{ $value.HttpEnabled }}
+    lb_target = {{ $value.LbTarget}}
     volumes = [{{ range $key, $value := $value.Volumes}}
      {
       name = "{{ $value.Name }}"

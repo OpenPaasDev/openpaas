@@ -18,7 +18,7 @@ locals {
     for i, value in var.server_groups :
     value.name => {
       count  = value.num,
-      subnet = "${i}", group = i, server_type = value.instance_type, http_enabled = value.http_enabled,
+      subnet = "${i}", group = i, server_type = value.instance_type, lb_target = value.lb_target,
       volumes = value.volumes
     }
   }
@@ -31,7 +31,7 @@ locals {
         name        = "${var.base_server_name}-${name}-${i + 1}",
         group       = value.group
         index       = i
-        http_enabled   = value.http_enabled
+        lb_target   = value.lb_target
         server_type = value.server_type
         volumes     = value.volumes
       }
@@ -225,7 +225,7 @@ resource "time_sleep" "wait" {
 
 
 resource "hcloud_load_balancer_target" "load_balancer_target" {
-  for_each         = { for key, val in local.servers : val.index => val.name if val.http_enabled == true }
+  for_each         = { for key, val in local.servers : val.index => val.name if val.lb_target == true }
   type             = "server"
   load_balancer_id = hcloud_load_balancer.lb1.id
   server_id        = hcloud_server.server_node[each.value].id

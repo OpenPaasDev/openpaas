@@ -17,13 +17,23 @@ server_groups:
   clients:
     num: 2
     instance_type: cpx31
-
-# kill this
-cluster_config:
-  servers: 3 # 3 or 5
-  clients: 2
-  vault_servers: 2
-  separate_consul_servers: false
+providers:
+  - name: k3s
+    config:
+      cluster_name: k8s
+      server_group: server
+      agent_groups: 
+      - agent
+      internal_network_interface_name: ens10 
+  - name: ansible
+    config:
+      groups:
+      - name: bootstrap
+        lifecycle: on-start
+        folder: bootstrap_playbooks
+      - name: sync
+        lifecycle: always
+        folder: playbooks
 
 cloud_provider_config:
   internal_network_interface_name: ens10

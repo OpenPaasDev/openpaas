@@ -15,12 +15,13 @@ import (
 //go:embed migrations/*.sql
 var fs embed.FS
 
-func Migrate(dbDir string) error {
+func Migrate(stateDb *Db) error {
 	d, err := iofs.New(fs, "migrations")
 	if err != nil {
 		return err
 	}
-	db, err := sql.Open("sqlite3", filepath.Join(dbDir, "state.db"))
+	fmt.Println("Migrating")
+	db, err := sql.Open("sqlite3", filepath.Join(stateDb.folder, "state.db"))
 	if err != nil {
 		return err
 	}

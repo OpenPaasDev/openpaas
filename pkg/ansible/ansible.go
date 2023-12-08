@@ -18,7 +18,7 @@ type ansibleClient struct {
 	configPath  string
 }
 
-func NewClient(inventory, secretsFile, user, configPath string) Client {
+func NewClient(inventory, user, configPath, secretsFile string) Client {
 	return &ansibleClient{
 		inventory:   inventory,
 		secretsFile: secretsFile,
@@ -28,5 +28,14 @@ func NewClient(inventory, secretsFile, user, configPath string) Client {
 }
 
 func (client *ansibleClient) Run(file string) error {
-	return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", file, client.inventory, client.user, client.secretsFile, client.configPath), os.Stdout)
+	if client.secretsFile != "" && client.configPath != "" {
+		return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s -e @%s", file, client.inventory, client.user, client.secretsFile, client.configPath), os.Stdout)
+	}
+	if client.secretsFile == "" && client.configPath == "" {
+		return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s", file, client.inventory, client.user), os.Stdout)
+	}
+	if client.secretsFile == "" {
+		return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s", file, client.inventory, client.user, client.configPath), os.Stdout)
+	}
+	return fmt.Errorf("insufficient client configuration provided")
 }
