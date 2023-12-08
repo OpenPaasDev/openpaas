@@ -56,6 +56,10 @@ func syncCmd() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
+			err = d.Sync(cnf, inv)
+			if err != nil {
+				panic(err)
+			}
 			err = provider.RunAll(ctx, cnf, inv)
 			if err != nil {
 				panic(err)
@@ -83,6 +87,10 @@ func bootstrap() *cobra.Command {
 			updateNodes(cnf, inv)
 			d := state.Init(cnf.BaseDir)
 			err = state.Migrate(d)
+			if err != nil {
+				panic(err)
+			}
+			err = d.Sync(cnf, inv)
 			if err != nil {
 				panic(err)
 			}

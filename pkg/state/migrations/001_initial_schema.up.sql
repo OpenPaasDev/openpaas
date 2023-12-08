@@ -1,12 +1,9 @@
 CREATE TABLE IF NOT EXISTS datacenters(
 		id TEXT PRIMARY KEY,
-		name TEXT,
-		region TEXT,
-		availability_zone TEXT
+		Idegion TEXT
 	);
 CREATE TABLE IF NOT EXISTS server_groups(
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT,
+		id TEXT PRIMARY KEY,
 		dc_id TEXT,
 		FOREIGN KEY(dc_id) REFERENCES datacenters(id)
 	);
@@ -20,7 +17,7 @@ CREATE TABLE IF NOT EXISTS servers(
         dc_name TEXT,
         is_lb_target BOOLEAN,
         instance_type TEXT,
-        server_group_id INTEGER,
+        server_group_id TEXT,
         FOREIGN KEY(server_group_id) REFERENCES server_groups(id)
     );
 
