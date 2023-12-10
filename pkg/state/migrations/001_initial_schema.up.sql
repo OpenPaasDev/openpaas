@@ -10,11 +10,9 @@ CREATE TABLE IF NOT EXISTS server_groups(
 
 CREATE TABLE IF NOT EXISTS servers(
         id TEXT PRIMARY KEY,
-        name TEXT,
         public_ip TEXT,
         private_ip TEXT,
         hostname TEXT,
-        dc_name TEXT,
         is_lb_target BOOLEAN,
         instance_type TEXT,
         server_group_id TEXT,

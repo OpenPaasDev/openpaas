@@ -18,8 +18,12 @@ func Init(folder string) *Db {
 	return &Db{folder: folder}
 }
 
+func (d *Db) initDb() (*sql.DB, error) {
+	return sql.Open("sqlite3", filepath.Join(d.folder, "state.db"))
+}
+
 func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
-	db, err := sql.Open("sqlite3", filepath.Join(d.folder, "state.db"))
+	db, err := d.initDb()
 	if err != nil {
 		return err
 	}
@@ -56,7 +60,31 @@ func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
 		if err != nil {
 			return err
 		}
+	}
 
+	for group, hostGroup := range inventory.All.Children {
+		for _, host := range hostGroup.GetHosts() {
+			fmt.Println(group)
+			fmt.Println(host)
+			if hostStruct, found := hostGroup.Hosts[host]; found {
+				fmt.Println(hostStruct)
+				stmt, err := db.Prepare(`
+				INSERT INTO servers(id, public_ip, private_ip, hostname, is_lb_target, instance_type, server_group_id)
+				VALUES (?, ?, ?, ?, ?)
+				ON CONFLICT(id)
+				DO UPDATE SET public_ip = excluded.public_ip, private_ip = excluded.private_ip, hostname = excluded.hostname, is_lb_target = excluded.is_lb_target, instance_type = excluded.instance_type, server_group_id = excluded.server_group_id;
+				`)
+				if err != nil {
+					return err
+				}
+				defer stmt.Close() //nolint: all
+				// instance type and lb target fields need to be calculted
+				_, err = stmt.Exec(hostStruct.ID, hostStruct.PublicIP, hostStruct.PrivateIP, hostStruct.HostName, false, "some instance", group)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil

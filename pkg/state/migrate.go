@@ -1,10 +1,8 @@
 package state
 
 import (
-	"database/sql"
 	"embed"
 	"fmt"
-	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
@@ -21,7 +19,7 @@ func Migrate(stateDb *Db) error {
 		return err
 	}
 	fmt.Println("Migrating")
-	db, err := sql.Open("sqlite3", filepath.Join(stateDb.folder, "state.db"))
+	db, err := stateDb.initDb()
 	if err != nil {
 		return err
 	}
