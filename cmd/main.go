@@ -38,7 +38,11 @@ func main() {
 	}
 
 	rootCmd.AddCommand(bootstrap(), syncCmd())
-	rootCmd.Execute()
+	err = rootCmd.Execute()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 func syncCmd() *cobra.Command {
 	var configFile string

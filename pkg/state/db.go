@@ -42,7 +42,7 @@ func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
 	if err != nil {
 		return err
 	}
-	for groupname, _ := range config.ServerGroups {
+	for groupname := range config.ServerGroups {
 		stmt, err := db.Prepare(`
 			INSERT INTO server_groups(id, dc_id)
 			VALUES (?, ?)
