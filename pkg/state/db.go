@@ -2,7 +2,6 @@ package state
 
 import (
 	"database/sql"
-	"fmt"
 	"path/filepath"
 
 	"github.com/OpenPaasDev/core/pkg/ansible"
@@ -43,9 +42,7 @@ func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
 	if err != nil {
 		return err
 	}
-	for groupname, group := range config.ServerGroups {
-		fmt.Println(groupname)
-		fmt.Println(group)
+	for groupname, _ := range config.ServerGroups {
 		stmt, err := db.Prepare(`
 			INSERT INTO server_groups(id, dc_id)
 			VALUES (?, ?)
@@ -64,13 +61,10 @@ func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
 
 	for group, hostGroup := range inventory.All.Children {
 		for _, host := range hostGroup.GetHosts() {
-			fmt.Println(group)
-			fmt.Println(host)
 			if hostStruct, found := hostGroup.Hosts[host]; found {
-				fmt.Println(hostStruct)
 				stmt, err := db.Prepare(`
 				INSERT INTO servers(id, public_ip, private_ip, hostname, is_lb_target, instance_type, server_group_id)
-				VALUES (?, ?, ?, ?, ?)
+				VALUES (?, ?, ?, ?, ?, ?, ?)
 				ON CONFLICT(id)
 				DO UPDATE SET public_ip = excluded.public_ip, private_ip = excluded.private_ip, hostname = excluded.hostname, is_lb_target = excluded.is_lb_target, instance_type = excluded.instance_type, server_group_id = excluded.server_group_id;
 				`)
@@ -79,7 +73,9 @@ func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
 				}
 				defer stmt.Close() //nolint: all
 				// instance type and lb target fields need to be calculted
-				_, err = stmt.Exec(hostStruct.ID, hostStruct.PublicIP, hostStruct.PrivateIP, hostStruct.HostName, false, "some instance", group)
+				instanceType := config.ServerGroups[group].InstanceType
+				isLbTarget := config.ServerGroups[group].LbTarget
+				_, err = stmt.Exec(hostStruct.ID, hostStruct.PublicIP, hostStruct.PrivateIP, hostStruct.HostName, isLbTarget, instanceType, group)
 				if err != nil {
 					return err
 				}

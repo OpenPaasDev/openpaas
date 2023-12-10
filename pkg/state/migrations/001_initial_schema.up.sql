@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS datacenters(
 		id TEXT PRIMARY KEY,
-		Idegion TEXT
+		region TEXT
 	);
 CREATE TABLE IF NOT EXISTS server_groups(
 		id TEXT PRIMARY KEY,
