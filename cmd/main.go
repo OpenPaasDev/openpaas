@@ -38,6 +38,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(bootstrap(), syncCmd())
+	rootCmd.Execute()
 }
 func syncCmd() *cobra.Command {
 	var configFile string
