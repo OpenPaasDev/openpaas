@@ -1,0 +1,59 @@
+- name: Bootstrap K3S bootstrap server
+  hosts: server[0]
+  become: yes
+  vars:
+    k3s_version: v1.28.5+k3s1 # Specify your desired K3s version here
+  tasks:
+    - name: Check if K3s is already installed
+      command: k3s --version
+      register: k3s_installed
+      failed_when: k3s_installed.stderr != '' and 'command not found' not in k3s_installed.stderr
+      changed_when: false
+    - name: Initialize the first K3s server with etcd
+      shell: curl -sfL http://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -s - server --cluster-init --flannel-iface eth0 --node-ip "{{ private_ip }}" --bind-address "{{ private_ip }}" --advertise-address "{{private_ip}}"
+      when: k3s_installed.rc != 0
+    - name: Get K3s Token from the First Server Node
+      shell: cat /var/lib/rancher/k3s/server/node-token
+      register: k3s_token
+      changed_when: false
+    - name: Store K3s Token as Fact
+      set_fact:
+        k3s_cluster_token: "{{ k3s_token.stdout }}"
+
+- name: Install and Configure K3s servers
+  hosts: server
+  become: yes
+  vars:
+    k3s_version: v1.28.5+k3s1 # Specify your desired K3s version here
+    first_server_private_ip: "{{ hostvars[groups['server'][0]]['private_ip'] }}"
+  tasks:
+    - name: Check if K3s is already installed
+      command: k3s --version
+      register: k3s_installed
+      failed_when: k3s_installed.stderr != '' and 'command not found' not in k3s_installed.stderr
+      changed_when: false
+    
+    - name: Join other K3s servers to the cluster
+      shell: >
+        curl -sfL http://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} K3S_TOKEN={{ hostvars['server[0]'].k3s_cluster_token}}
+        sh -s - server --server https://{{ hostvars['server[0]'].private_ip }}:6443 --flannel-iface eth0
+        --node-ip "{{ private_ip }}" --bind-address "{{ private_ip }}" --advertise-address "{{ private_ip }}"
+      when: inventory_hostname != groups['server'][0] and k3s_installed.rc != 0
+      delegate_to: "{{ groups['server'][0] }}"
+
+- name: Install K3s on Agent Nodes
+  hosts: agent
+  become: yes
+  vars:
+    k3s_version: v1.28.5+k3s1 # Specify your desired K3s version here
+  tasks:
+    - name: Check if K3s agent is already installed
+      command: k3s agent --version
+      register: k3s_agent_installed
+      failed_when: k3s_agent_installed.stderr != '' and 'command not found' not in k3s_agent_installed.stderr
+      changed_when: false
+
+    - name: Join K3s agents to the cluster
+      shell: >
+        curl -sfL http://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} K3S_TOKEN={{ hostvars['server[0]'].k3s_cluster_token }}
+        K3S_URL=https://{{ hostvars['server[0]'].private_ip }}:6443 sh -s - agent --flannel-iface eth0 -node-ip "{{ private_ip }}"
