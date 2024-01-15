@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OpenPaasDev/core/pkg/conf"
-	"github.com/OpenPaasDev/core/pkg/util"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/util"
 	"github.com/hashicorp/hcl2/gohcl"
 	"github.com/hashicorp/hcl2/hcl"
 	"github.com/hashicorp/hcl2/hclparse"

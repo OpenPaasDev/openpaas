@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/OpenPaasDev/core/pkg/ansible"
-	"github.com/OpenPaasDev/core/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/ansible"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	_ "github.com/mattn/go-sqlite3"
 )
 

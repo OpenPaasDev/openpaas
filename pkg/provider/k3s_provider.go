@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/OpenPaasDev/core/pkg/ansible"
-	"github.com/OpenPaasDev/core/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/ansible"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
 )
 
 type K3S struct {

@@ -10,11 +10,11 @@ import (
 	ssh "github.com/helloyi/go-sshclient"
 	"github.com/spf13/cobra"
 
-	"github.com/OpenPaasDev/core/pkg/ansible"
-	"github.com/OpenPaasDev/core/pkg/conf"
-	"github.com/OpenPaasDev/core/pkg/provider"
-	"github.com/OpenPaasDev/core/pkg/state"
-	"github.com/OpenPaasDev/core/pkg/terraform"
+	"github.com/OpenPaasDev/openpaas/pkg/ansible"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/provider"
+	"github.com/OpenPaasDev/openpaas/pkg/state"
+	"github.com/OpenPaasDev/openpaas/pkg/terraform"
 )
 
 func main() {

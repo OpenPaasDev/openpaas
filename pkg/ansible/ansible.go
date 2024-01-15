@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/OpenPaasDev/core/pkg/runtime"
+	"github.com/OpenPaasDev/openpaas/pkg/runtime"
 )
 
 type Client interface {

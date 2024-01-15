@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/OpenPaasDev/core/pkg/conf"
-	"github.com/OpenPaasDev/core/pkg/util"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

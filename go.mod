@@ -1,4 +1,4 @@
-module github.com/OpenPaasDev/core
+module github.com/OpenPaasDev/openpaas
 
 go 1.21
 

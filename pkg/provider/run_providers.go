@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 
-	"github.com/OpenPaasDev/core/pkg/ansible"
-	"github.com/OpenPaasDev/core/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/ansible"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
 )
 
 func RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error {
