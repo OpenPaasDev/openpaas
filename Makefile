@@ -26,3 +26,7 @@ destroy:
 	terraform destroy -var="hcloud_token=$HETZNER_TOKEN"
 	cd ../
 	rm -rf config
+
+.PHONY: docs
+docs:
+	pkgsite

@@ -1,3 +1,18 @@
+/*
+Core provisions infrastructure based on the provided config.
+Underneath, it uses Terraform and Ansible to provision and configure the servers.
+
+Without an explicit file, it processes ./config.yaml by default.
+
+Usage:
+
+	core [flags] [file]
+
+The flags are:
+
+	-h,--help
+	    Shows this output.
+*/
 package main
 
 import (
