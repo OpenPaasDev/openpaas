@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRandString(t *testing.T) {
@@ -24,6 +25,6 @@ func TestRandString(t *testing.T) {
 
 func TestGetPublicIP(t *testing.T) {
 	ip, err := GetPublicIP(context.Background())
-	assert.NoError(t, err)
-	assert.Equal(t, strings.Count(ip, "."), 3)
+	require.NoError(t, err)
+	assert.Equal(t, 3, strings.Count(ip, "."))
 }

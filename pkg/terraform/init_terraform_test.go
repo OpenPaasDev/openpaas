@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Init_Terraform(t *testing.T) {
 	ctx := context.Background()
 	tf, err := InitTf(ctx, ".", os.Stdin, os.Stderr)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	v, _, err := tf.Version(ctx, false)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, v)
 }

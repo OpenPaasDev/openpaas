@@ -6,12 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OpenPaasDev/core/pkg/conf"
-	"github.com/OpenPaasDev/core/pkg/util"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/util"
 	"github.com/hashicorp/hcl2/gohcl"
 	"github.com/hashicorp/hcl2/hcl"
 	"github.com/hashicorp/hcl2/hclparse"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -28,17 +29,17 @@ type Variable struct {
 
 func TestGenerateTerraform(t *testing.T) {
 	config, err := conf.Load("../testdata/config.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	folder := util.RandString(8)
 	config.BaseDir = folder
 	defer func() {
 		e := os.RemoveAll(filepath.Clean(folder))
-		assert.NoError(t, e)
+		require.NoError(t, e)
 	}()
 
 	err = GenerateTerraform(config)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	parser := hclparse.NewParser()
 	f, parseDiags := parser.ParseHCLFile(filepath.Clean(filepath.Join(folder, "terraform", "vars.tf")))

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/OpenPaasDev/core/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	"gopkg.in/yaml.v3"
 )
 

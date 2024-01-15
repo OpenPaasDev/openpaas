@@ -6,21 +6,21 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLoadConfig(t *testing.T) {
 	conf, err := Load(filepath.Join("..", "testdata", "config.yaml"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, conf)
 	fmt.Println(conf)
 
 	assert.Equal(t, "config", conf.BaseDir)
 	assert.Equal(t, "hetzner", conf.DC)
-	assert.Equal(t, "ens10", conf.CloudProviderConfig.NetworkInterface)
 	assert.Equal(t, "root", conf.CloudProviderConfig.User)
 	assert.Equal(t, "hetzner", conf.CloudProviderConfig.Provider)
 
-	assert.Equal(t, 2, len(conf.ServerGroups))
+	assert.Len(t, conf.ServerGroups, 2)
 	assert.Equal(t, "cpx31", conf.ServerGroups["clients"].InstanceType)
 	assert.Equal(t, 2, conf.ServerGroups["clients"].Num)
 	assert.Equal(t, 20, conf.ServerGroups["servers"].Volumes[0].Size)
@@ -30,13 +30,22 @@ func TestLoadConfig(t *testing.T) {
 
 }
 
+func TestLoadProviders(t *testing.T) {
+	conf, err := Load(filepath.Join("..", "testdata", "config.yaml"))
+	require.NoError(t, err)
+	assert.NotNil(t, conf)
+	fmt.Println(conf)
+
+	assert.Len(t, conf.Providers, 2)
+}
+
 func TestLoadProviderConfig(t *testing.T) {
 	conf, err := Load(filepath.Join("..", "testdata", "config.yaml"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, conf)
 
 	provider, err := LoadTFVarsConfig(*conf)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, provider)
 	hetzner := provider.ProviderConfig.(HetznerSettings)
 
