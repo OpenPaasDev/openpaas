@@ -2,6 +2,7 @@ package state
 
 import (
 	"database/sql"
+	"fmt"
 	"path/filepath"
 
 	"github.com/OpenPaasDev/core/pkg/ansible"
@@ -11,14 +12,19 @@ import (
 
 type Db struct {
 	folder string
+	dbName string
 }
 
 func Init(folder string) *Db {
-	return &Db{folder: folder}
+	return &Db{folder: folder, dbName: "state.db"}
+}
+
+func InitWithName(folder string, dbName string) *Db {
+	return &Db{folder: folder, dbName: dbName}
 }
 
 func (d *Db) initDb() (*sql.DB, error) {
-	return sql.Open("sqlite3", filepath.Join(d.folder, "state.db"))
+	return sql.Open("sqlite3", filepath.Join(d.folder, d.dbName))
 }
 
 func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
@@ -27,7 +33,11 @@ func (d *Db) Sync(config *conf.Config, inventory *ansible.Inventory) error {
 		return err
 	}
 	defer db.Close() //nolint: all
-
+	err = Migrate(d)
+	if err != nil {
+		fmt.Println("error migrating db", err)
+		return err
+	}
 	statement, err := db.Prepare(`
         INSERT INTO datacenters(id, region) 
         VALUES (?, ?)

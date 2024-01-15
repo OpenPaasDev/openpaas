@@ -1,11 +1,14 @@
-package k3s
+package provider
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/OpenPaasDev/core/pkg/ansible"
 	"github.com/OpenPaasDev/core/pkg/conf"
 )
 
-type Service struct {
+type K3S struct {
 }
 
 type K3sSettings struct {
@@ -14,6 +17,7 @@ type K3sSettings struct {
 	AgentGroup       string `yaml:"agent_group"`
 }
 
-func (s *Service) Build(cnf conf.Config, inventory ansible.Inventory) error {
+func (s *K3S) Run(context.Context, *conf.Config, *ansible.Inventory) error {
+	fmt.Println("Run K3S installer")
 	return nil
 }

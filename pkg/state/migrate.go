@@ -23,10 +23,7 @@ func Migrate(stateDb *Db) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		e := db.Close()
-		fmt.Printf("Error closing db %v", e)
-	}()
+
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
 		return err
@@ -39,6 +36,9 @@ func Migrate(stateDb *Db) error {
 	if err != nil {
 		return err
 	}
-	return m.Up()
-
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
 }

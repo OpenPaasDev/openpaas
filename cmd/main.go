@@ -57,10 +57,7 @@ func syncCmd() *cobra.Command {
 				panic(err)
 			}
 			d := state.Init(cnf.BaseDir)
-			//	err = state.Migrate(d)
-			//if err != nil {
-			//	panic(err)
-			//}
+
 			err = d.Sync(cnf, inv)
 			if err != nil {
 				panic(err)
@@ -91,10 +88,7 @@ func bootstrap() *cobra.Command {
 			}
 			updateNodes(cnf, inv)
 			d := state.Init(cnf.BaseDir)
-			err = state.Migrate(d)
-			if err != nil {
-				panic(err)
-			}
+
 			err = d.Sync(cnf, inv)
 			if err != nil {
 				panic(err)
