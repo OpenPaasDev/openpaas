@@ -36,7 +36,7 @@ func TestLoadProviders(t *testing.T) {
 	assert.NotNil(t, conf)
 	fmt.Println(conf)
 
-	assert.Len(t, conf.Providers, 2)
+	assert.Len(t, conf.Providers, 1)
 }
 
 func TestLoadProviderConfig(t *testing.T) {

@@ -9,6 +9,10 @@ import (
 
 type Ansible struct{}
 
-func (s *Ansible) Run(context.Context, *conf.Config, *ansible.Inventory) error {
+type AnsibleConfig struct {
+	Inventory string `yaml:"inventory"`
+}
+
+func (s *Ansible) Run(ctx context.Context, globalConf *conf.Config, providerConfig interface{}, inventory *ansible.Inventory) error {
 	return nil
 }

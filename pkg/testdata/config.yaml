@@ -18,22 +18,15 @@ server_groups:
     num: 2
     instance_type: cpx31
 providers:
-  - name: k3s
-    config:
-      cluster_name: k8s
-      server_group: server
-      agent_groups: 
-      - agent
-      internal_network_interface_name: ens10 
-  - name: ansible
-    config:
-      groups:
-      - name: bootstrap
-        lifecycle: on-start
-        folder: bootstrap_playbooks
-      - name: sync
-        lifecycle: always
-        folder: playbooks
+  ansible:
+    playbooks: 
+    - file: playbooks/k3s.yml
+      vars: 
+        network_interface: ens10
+        bar: foo
+    global_vars:
+      network_interface: ens10
+      foo: bar
 
 cloud_provider_config:
   internal_network_interface_name: ens10
