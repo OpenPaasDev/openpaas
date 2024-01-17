@@ -4,6 +4,9 @@ Underneath, it uses Terraform and Ansible to provision and configure the servers
 
 Without an explicit file, it processes ./config.yaml by default.
 
+NOTE: the executable sets the Environment variable ANSIBLE_HOST_KEY_CHECKING to False during execution.
+This disables host key checking on SSH connections.
+
 Usage:
 
 	core [flags] [file]
@@ -12,6 +15,11 @@ The flags are:
 
 	-h,--help
 	    Shows this output.
+
+Environment Variables:
+
+	HETZNER_TOKEN
+		The Hetzner access token to use to apply the Terraform configuration
 */
 package main
 
@@ -59,6 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 }
+
 func syncCmd() *cobra.Command {
 	var configFile string
 	cmd := &cobra.Command{
@@ -142,6 +151,7 @@ func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Invento
 		return nil, nil, err
 	}
 
+	//TODO we initialise here and then again in line 175, is this needed? why?
 	tf, err := terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), os.Stdout, os.Stderr)
 	if err != nil {
 		return nil, nil, err

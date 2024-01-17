@@ -12,7 +12,10 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 - [Ansible](https://www.ansible.com) for automation of server configuration. `brew install ansible`
 
 ## TODO
+
+- [ ] modify config to use existing pre-uploaded keys from hetzner for ssh (see test)
 - [ ] Terraform variables from environment
 - [ ] Generate "diff" inventory: take old TF output and new TF output, and generate a diff inventory
 - [ ] Provide `config.yaml` or file to process as parameter, with a default value of `./config.yaml`
-- [ ] Add help flag (--help)
+- [ ] Complete Command configurationmfor command and main subcommands, including any new flags (take it from the package documentation)
+- [ ] Init terraform version, parameterise?

@@ -49,3 +49,6 @@ coverage.out
 certs/
 profile.cov
 **/.idea/*
+
+# exclude config
+config.yaml
