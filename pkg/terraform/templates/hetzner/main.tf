@@ -126,6 +126,13 @@ resource "hcloud_firewall_attachment" "fw_ref" {
     ])
 }
 
+# Define hcloud_ssh_key resources
+data "hcloud_ssh_key" "ssh_keys_provided" {
+  for_each = toset(var.ssh_keys)
+
+  fingerprint = each.value
+}
+
 resource "hcloud_server" "server_node" {
   for_each           = { for entry in local.servers : "${entry.name}" => entry }
   name               = each.value.name
@@ -146,7 +153,7 @@ resource "hcloud_server" "server_node" {
     "group" = each.value.group_name
   }
 
-  ssh_keys = var.ssh_keys
+  ssh_keys = [for key in data.hcloud_ssh_key.ssh_keys_provided : key.id]
 }
 
 resource "hcloud_server_network" "network_binding" {

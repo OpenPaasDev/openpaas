@@ -50,7 +50,7 @@ func TestLoadProviderConfig(t *testing.T) {
 	hetzner := provider.ProviderConfig.(HetznerSettings)
 
 	expected := HetznerSettings{
-		SSHKeys:          []string{"wille.faler@gmail.com"},
+		SSHKeys:          []string{"123456"},
 		Location:         "nbg1",
 		LoadBalancerType: "lb11",
 		ResourceNames: HetznerResourceNames{

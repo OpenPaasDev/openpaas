@@ -46,8 +46,8 @@ cloud_provider_config:
     - 10.43.0.0/16
   provider_settings:
     location: fsn1
-    ssh_keys:
-    - wfaler@chaordic.io
+    ssh_keys: # use Hetzner hcloud CLI tool to retrieve fingerprints: "hcloud ssh-key list"
+    - 70:67:b9:e2:d2:e6:6f:51:82:e4:6d:cc:c6:ff:26:8a
     load_balancer_type: lb11
     ssl_certificate_ids:
     - 1232582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"

@@ -22,7 +22,6 @@ variable "server_groups" {
   ]
 }
 
-
 variable "ssh_keys" {
   type = list
   default = [{{ range $key, $value := .CloudProviderConfig.ProviderSettings.ssh_keys}}

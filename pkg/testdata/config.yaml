@@ -44,7 +44,7 @@ cloud_provider_config:
   provider_settings:
     location: nbg1
     ssh_keys:
-    - wille.faler@gmail.com
+    - 123456
     load_balancer_type: lb11 # lb11 or lb21
     resource_names:
       base_server_name: nomad-srv

@@ -58,7 +58,7 @@ func TestGenerateTerraform(t *testing.T) {
 		defaultVal cty.Value
 	}{
 		{name: "hcloud_token", tpe: "string", defaultVal: cty.NullVal(cty.String)},
-		{name: "ssh_keys", tpe: "list", defaultVal: cty.TupleVal([]cty.Value{cty.StringVal("wille.faler@gmail.com")})},
+		{name: "ssh_keys", tpe: "list", defaultVal: cty.TupleVal([]cty.Value{cty.StringVal("123456")})},
 		{name: "base_server_name", tpe: "string", defaultVal: cty.StringVal("nomad-srv")},
 		{name: "firewall_name", tpe: "string", defaultVal: cty.StringVal("dev_firewall")},
 		{name: "network_name", tpe: "string", defaultVal: cty.StringVal("dev_network")},

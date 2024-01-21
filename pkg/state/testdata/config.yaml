@@ -38,7 +38,6 @@ providers:
 cloud_provider_config:
   sudo_user: root
   sudo_dir: /root
-  ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
   allowed_ips:
     - 178.194.90.93/32
@@ -47,7 +46,7 @@ cloud_provider_config:
   provider_settings:
     location: fsn1
     ssh_keys:
-    - wfaler@chaordic.io
+    - 1234523
     load_balancer_type: lb11
     ssl_certificate_ids:
     - 1232582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"
