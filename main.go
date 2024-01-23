@@ -1,20 +1,36 @@
 /*
-Core provisions infrastructure based on the provided config.
-Underneath, it uses Terraform and Ansible to provision and configure the servers.
+OpenPaaS provisions infrastructure based on the provided config,
+while leveraging existing IaC tooling.
 
-Without an explicit file, it processes ./config.yaml by default.
+The intention is to simplify the configuration for a majority of application, which
+can be server with efficient, traditional infrastructure. This covers a majority of
+companies.
+
+Using tools like Terraform and Ansible underneath means that you can inspect the
+output and understand what is going to happen, without having to learn a new IaC tool.
+
+Currently, it defaults to Hetzner, but it can easily be expanded to target other platforms.
 
 NOTE: the executable sets the Environment variable ANSIBLE_HOST_KEY_CHECKING to False during execution.
 This disables host key checking on SSH connections.
 
 Usage:
 
-	core [flags] [file]
+	openpaas [flags]
+	openpaas [command]
 
-The flags are:
+Available Commands:
 
-	-h,--help
-	    Shows this output.
+	bootstrap   Bootstrap your platform
+	completion  Generate the autocompletion script for the specified shell
+	help        Help about any command
+	sync        Sync your platform
+
+Flags:
+
+	-h, --help   help for openpaas
+
+Use "openpaas [command] --help" for more information about a command.
 
 Environment Variables:
 
@@ -50,8 +66,18 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "openpaas",
-		Short: "sets up the openpaas",
-		Long:  `openpaas`,
+		Short: "Sets up the OpenPaas platform",
+		Long: `OpenPaaS provisions infrastructure based on the provided config, 
+while leveraging existing IaC tooling.
+
+The intention is to simplify the configuration for a majority of application, which 
+can be server with efficient, traditional infrastructure. This covers a majority of 
+companies. 
+
+Using tools like Terraform and Ansible underneath means that you can inspect the 
+output and understand what is going to happen, without having to learn a new IaC tool.
+
+Currently, it defaults to Hetzner, but it can easily be expanded to target other platforms.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			e := cmd.Help()
 			if e != nil {
@@ -60,7 +86,7 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(bootstrap(), syncCmd())
+	rootCmd.AddCommand(bootstrap(), syncCmd(), updateServers())
 	err = rootCmd.Execute()
 	if err != nil {
 		fmt.Println(err)
@@ -73,7 +99,9 @@ func syncCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Sync your platform",
-		Long:  `Sync the platform`,
+		Long: `Syncs any changes in your platform configuration with the deployment.
+
+This command won't trigger updates in the deployed servers.'`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			cnf, inv, err := initStack(ctx, configFile)
@@ -102,8 +130,11 @@ func bootstrap() *cobra.Command {
 	var configFile string
 	cmd := &cobra.Command{
 		Use:   "bootstrap",
-		Short: "Bootstrap your platform",
-		Long:  `bootstrap the platform`,
+		Short: "Bootstraps your platform",
+		Long: `Bootstraps your platform, applying the configuration to your deployment.
+
+This command will run an upgrade command on your servers, to ensure they have the 
+latest version of the installed packages.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			cnf, inv, err := initStack(ctx, configFile)
@@ -130,14 +161,31 @@ func bootstrap() *cobra.Command {
 	return cmd
 }
 
-func addFlags(cmd *cobra.Command, file *string) {
-	cmd.Flags().StringVarP(file, "config.file", "f", "", "configuration file")
+func updateServers() *cobra.Command {
+	var configFile string
+	cmd := &cobra.Command{
+		Use:   "updateNodes",
+		Short: "Updates the packages installed in your servers",
+		Long: `Connects to your servers via ssh and runs an upgrade command.
 
-	err := cmd.MarkFlagRequired("config.file")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+This is useful to apply security patches to your platform.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+			cnf, inv, err := initStack(ctx, configFile)
+			if err != nil {
+				panic(err)
+			}
+			updateNodes(cnf, inv)
+		},
 	}
+
+	addFlags(cmd, &configFile)
+
+	return cmd
+}
+
+func addFlags(cmd *cobra.Command, file *string) {
+	cmd.Flags().StringVarP(file, "config.file", "f", "./config.yaml", "OpenPaaS configuration file to use")
 }
 
 func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Inventory, error) {

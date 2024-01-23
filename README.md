@@ -21,10 +21,9 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 
 ## TODO
 
-- [ ] Provide `config.yaml` or file to process as parameter, with a default value of `./config.yaml`,
+
 - [ ] Init terraform version, parameterise?
 - [ ] Terraform variables from environment
-- [ ] Complete Command configuration for command and main subcommands, including any new flags (take it from the package documentation)
 
 
 - [ ] merge with bootstrap ansible branch

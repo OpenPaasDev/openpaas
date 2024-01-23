@@ -18,7 +18,7 @@ sync:
 
 .PHONY: bootstrap
 bootstrap:
-	go run main.go bootstrap --config.file=config.yaml
+	go run main.go bootstrap
 
 .PHONY: destroy
 destroy:
