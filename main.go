@@ -96,6 +96,7 @@ Currently, it defaults to Hetzner, but it can easily be expanded to target other
 
 func syncCmd() *cobra.Command {
 	var configFile string
+	var terraformVersion string
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Sync your platform",
@@ -104,7 +105,7 @@ func syncCmd() *cobra.Command {
 This command won't trigger updates in the deployed servers.'`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			cnf, inv, err := initStack(ctx, configFile)
+			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
 			if err != nil {
 				panic(err)
 			}
@@ -121,13 +122,14 @@ This command won't trigger updates in the deployed servers.'`,
 		},
 	}
 
-	addFlags(cmd, &configFile)
+	addFlags(cmd, &configFile, &terraformVersion)
 
 	return cmd
 }
 
 func bootstrap() *cobra.Command {
 	var configFile string
+	var terraformVersion string
 	cmd := &cobra.Command{
 		Use:   "bootstrap",
 		Short: "Bootstraps your platform",
@@ -137,7 +139,7 @@ This command will run an upgrade command on your servers, to ensure they have th
 latest version of the installed packages.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			cnf, inv, err := initStack(ctx, configFile)
+			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
 			if err != nil {
 				panic(err)
 			}
@@ -156,13 +158,14 @@ latest version of the installed packages.`,
 		},
 	}
 
-	addFlags(cmd, &configFile)
+	addFlags(cmd, &configFile, &terraformVersion)
 
 	return cmd
 }
 
 func updateServers() *cobra.Command {
 	var configFile string
+	var terraformVersion string
 	cmd := &cobra.Command{
 		Use:   "updateNodes",
 		Short: "Updates the packages installed in your servers",
@@ -171,7 +174,7 @@ func updateServers() *cobra.Command {
 This is useful to apply security patches to your platform.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			cnf, inv, err := initStack(ctx, configFile)
+			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
 			if err != nil {
 				panic(err)
 			}
@@ -179,16 +182,17 @@ This is useful to apply security patches to your platform.`,
 		},
 	}
 
-	addFlags(cmd, &configFile)
+	addFlags(cmd, &configFile, &terraformVersion)
 
 	return cmd
 }
 
-func addFlags(cmd *cobra.Command, file *string) {
+func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
 	cmd.Flags().StringVarP(file, "config.file", "f", "./config.yaml", "OpenPaaS configuration file to use")
+	cmd.Flags().StringVarP(terraformVersion, "terraform.version", "t", "1.4.2", "Terraform version to use")
 }
 
-func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Inventory, error) {
+func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
 	cnf, err := conf.Load(file)
 	if err != nil {
 		return nil, nil, err
@@ -200,7 +204,7 @@ func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Invento
 	}
 
 	//TODO we initialise here and then again in line 175, is this needed? why?
-	tf, err := terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), os.Stdout, os.Stderr)
+	tf, err := terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, os.Stdout, os.Stderr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -220,7 +224,7 @@ func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Invento
 			panic(e)
 		}
 	}()
-	tf, err = terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), f, os.Stderr)
+	tf, err = terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, f, os.Stderr)
 	if err != nil {
 		return nil, nil, err
 	}
