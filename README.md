@@ -22,7 +22,6 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 ## TODO
 
 
-- [ ] Init terraform version, parameterise?
 - [ ] Terraform variables from environment
 
 
