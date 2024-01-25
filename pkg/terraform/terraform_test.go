@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	"github.com/OpenPaasDev/openpaas/pkg/util"
 	"github.com/hashicorp/hcl2/gohcl"
@@ -25,6 +27,15 @@ type Variable struct {
 	Name      string         `hcl:"name,label"`
 	Default   *cty.Value     `hcl:"default,optional"`
 	Sensitive bool           `hcl:"sensitive,optional"`
+}
+
+type CloudInitConfig struct {
+	Users []UserConfig `yaml:"users"`
+}
+
+type UserConfig struct {
+	Name      string   `yaml:"name"`
+	ImportIds []string `yaml:"ssh_import_id"`
 }
 
 func TestGenerateTerraform(t *testing.T) {
@@ -83,4 +94,15 @@ func TestGenerateTerraform(t *testing.T) {
 	}
 
 	assert.Equal(t, len(expectedMap), len(vars))
+
+	// test cloud-init
+	var cloudInit CloudInitConfig
+	bytes, err := os.ReadFile(filepath.Clean(filepath.Join(folder, "terraform", "cloud-init.yml")))
+	require.NoError(t, err)
+	err = yaml.Unmarshal(bytes, &cloudInit)
+	require.NoError(t, err)
+
+	assert.Len(t, cloudInit.Users, 1)
+	assert.Equal(t, "root", cloudInit.Users[0].Name)
+	assert.Equal(t, []string{"gh:wfaler", "gh:pvillega"}, cloudInit.Users[0].ImportIds)
 }

@@ -36,9 +36,10 @@ providers:
         folder: playbooks
 
 cloud_provider_config:
-  sudo_user: root
-  sudo_dir: /root
-  ssh_key: /home/wfaler/.ssh/id_rsa
+  sudo_user: devops
+  ssh_key_github_ids: # retrieves public ssh keys under https://github.com/wfaler.keys
+      - wfaler
+  private_ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
   allowed_ips:
     - 178.194.90.93/32

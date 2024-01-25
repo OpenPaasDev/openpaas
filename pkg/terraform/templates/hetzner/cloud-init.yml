@@ -1,0 +1,36 @@
+#cloud-config
+users:
+  - name: "{{.CloudProviderConfig.User}}"
+    groups: users, admin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_import_id: [{{ range $key, $value := .CloudProviderConfig.GithubIds }}"gh:{{ $value }}",{{ end }}]
+package_update: true
+package_upgrade: true
+# default packages we want to enable always, for security, like fail2ban
+packages:
+  - fail2ban
+  - ufw
+
+runcmd:
+  # fail2ban config
+  - printf "[sshd]\nenabled = true\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+  # firewall config
+  - ufw allow 'OpenSSH'
+  - ufw enable
+  #  secure ssh
+  - sed -ie '/^#PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -ie '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -ie '/^#PermitEmptyPasswords/s/^.*$/PermitEmptyPasswords no/' /etc/ssh/sshd_config
+  - sed -ie '/^X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+  - sed -ie '/^#MaxAuthTries/s/^.*$/MaxAuthTries 6/' /etc/ssh/sshd_config
+  - sed -ie '/^#ClientAliveInterval/s/^.*$/ClientAliveInterval 300/' /etc/ssh/sshd_config
+  - sed -ie '/^#ClientAliveCountMax/s/^.*$/ClientAliveCountMax 3/' /etc/ssh/sshd_config
+  - sed -ie '/^#AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+  - sed -ie '/^#AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+  - sed -i '/^#AuthorizedKeysFile[ \t]*/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+  - sed -i '$a AllowUsers {{.CloudProviderConfig.User}}' /etc/ssh/sshd_config
+  - systemctl restart ssh
+  - sleep 5 && reboot

@@ -48,11 +48,11 @@ type ClientVolume struct {
 
 type CloudProvider struct {
 	User             string                 `yaml:"sudo_user"`
-	Dir              string                 `yaml:"sudo_dir"`
+	GithubIds        []string               `yaml:"ssh_key_github_ids"`
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`
-	SSHKey           string                 `yaml:"ssh_key"`
+	SSHKey           string                 `yaml:"private_ssh_key"`
 }
 
 type HetznerResourceNames struct {

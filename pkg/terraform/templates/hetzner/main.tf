@@ -154,6 +154,7 @@ resource "hcloud_server" "server_node" {
   }
 
   ssh_keys = [for key in data.hcloud_ssh_key.ssh_keys_provided : key.id]
+  user_data  = file("cloud-init.yml")
 }
 
 resource "hcloud_server_network" "network_binding" {

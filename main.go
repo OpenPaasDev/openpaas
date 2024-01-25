@@ -127,6 +127,7 @@ This command won't trigger updates in the deployed servers.'`,
 	return cmd
 }
 
+// TODO this is now equivalent to sync, maybe simplify into 1 method?
 func bootstrap() *cobra.Command {
 	var configFile string
 	var terraformVersion string
@@ -143,7 +144,6 @@ latest version of the installed packages.`,
 			if err != nil {
 				panic(err)
 			}
-			updateNodes(cnf, inv)
 			d := state.Init(cnf.BaseDir)
 
 			err = d.Sync(cnf, inv)

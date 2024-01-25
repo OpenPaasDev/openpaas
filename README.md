@@ -22,18 +22,19 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 ## TODO
 
 
-- [ ] Terraform variables from environment
+- [ ] add documentation to parts of the code (I need to work more with it)
+- [ ] enable remote backend for TF for coordination, based on some flag
 
-
-- [ ] merge with bootstrap ansible branch
-- [ ] add documentation to parts of the code
 
 - [ ] copy ansible playbook from artaml and use it as template to run nginx as binary, directly
 - [ ] using systemctl, setup nginx, upload/download binary, upload service, restart service
-- [ ] enable remote backend for coordination, based on some flag
 
 - [ ] hetzner minimum viable config (2 boxes, 1 load balancer, 1 postgres, private network)
+ 
+
+- [ ] Terraform variables from environment
 - [ ] Generate "diff" inventory: take old TF output and new TF output, and generate a diff inventory
+- [ ] merge with bootstrap ansible branch (when merged to master)
 
-- [ ] Issue? the firewall only allows predefined ip, how to access if ip cycles? may need a default strong root password?
 
+sudo cloud-init schema --system
