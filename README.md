@@ -36,5 +36,7 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 - [ ] Generate "diff" inventory: take old TF output and new TF output, and generate a diff inventory
 - [ ] merge with bootstrap ansible branch (when merged to master)
 
+- [ ] set up postgres and backups? single ndoe with continues backup + daily snapshot?
+- [ ] postgres to master/slave
 
-sudo cloud-init schema --system
+- [ ] o11y at infra level (grafana, tempo, loki, successor-to-prometheus) as a playbook
