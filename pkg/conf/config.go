@@ -55,24 +55,6 @@ type CloudProvider struct {
 	SSHKey           string                 `yaml:"private_ssh_key"`
 }
 
-type HetznerResourceNames struct {
-	BaseServerName string `yaml:"base_server_name"`
-	FirewallName   string `yaml:"firewall_name"`
-	NetworkName    string `yaml:"network_name"`
-}
-
-type HetznerSettings struct {
-	Location         string               `yaml:"location"`
-	SSHKeys          []string             `yaml:"ssh_keys"`
-	ResourceNames    HetznerResourceNames `yaml:"resource_names"`
-	LoadBalancerType string               `yaml:"load_balancer_type"`
-}
-
-type TFVarsConfig struct {
-	ServerGroups   map[string]ServerGroup
-	ProviderConfig interface{}
-}
-
 func Load(file string) (*Config, error) {
 	bytes, err := os.ReadFile(filepath.Clean(file))
 	if err != nil {
@@ -84,34 +66,6 @@ func Load(file string) (*Config, error) {
 		return nil, err
 	}
 	return &config, nil
-}
-
-func LoadTFVarsConfig(config Config) (*TFVarsConfig, error) {
-	var providerConfig interface{}
-	if config.CloudProviderConfig.Provider == "hetzner" {
-		var hetznerConfig HetznerSettings
-		bytes, err := yaml.Marshal(config.CloudProviderConfig.ProviderSettings)
-		if err != nil {
-			return nil, err
-		}
-
-		err = yaml.Unmarshal(bytes, &hetznerConfig)
-		if err != nil {
-			return nil, err
-		}
-		providerConfig = hetznerConfig
-	}
-
-	for _, group := range config.ServerGroups {
-		if group.Volumes == nil {
-			group.Volumes = []Volume{}
-		}
-	}
-
-	return &TFVarsConfig{
-		ServerGroups:   config.ServerGroups,
-		ProviderConfig: providerConfig,
-	}, nil
 }
 
 func LoadTFExecVars() *tfexec.VarOption {

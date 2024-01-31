@@ -41,31 +41,6 @@ func TestLoadProviders(t *testing.T) {
 	assert.Len(t, conf.Providers, 2)
 }
 
-func TestLoadProviderConfig(t *testing.T) {
-	conf, err := Load(filepath.Join("..", "testdata", "config.yaml"))
-	require.NoError(t, err)
-	assert.NotNil(t, conf)
-
-	provider, err := LoadTFVarsConfig(*conf)
-	require.NoError(t, err)
-	assert.NotNil(t, provider)
-	hetzner := provider.ProviderConfig.(HetznerSettings)
-
-	expected := HetznerSettings{
-		SSHKeys:          []string{"123456"},
-		Location:         "nbg1",
-		LoadBalancerType: "lb11",
-		ResourceNames: HetznerResourceNames{
-			BaseServerName: "nomad-srv",
-			FirewallName:   "dev_firewall",
-			NetworkName:    "dev_network",
-		},
-	}
-
-	assert.Equal(t, expected, hetzner)
-	assert.Equal(t, []string{"85.4.84.201/32"}, conf.CloudProviderConfig.AllowedIPs)
-}
-
 func TestLoadTFExecVars(t *testing.T) {
 	theVar := LoadTFExecVars()
 
