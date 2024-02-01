@@ -193,30 +193,52 @@ func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
 }
 
 func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
-	cnf, err := conf.Load(file)
+	cnf, err := loadConfig(file)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = terraform.GenerateTerraform(cnf)
+	inventory, err := initTerraform(ctx, cnf, terraformVersion)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	return cnf, inventory, nil
+}
+
+// loads the config file (yaml) and does any prep work needed before we use that config with Terraform and Ansible
+// for example, it takes care of setting the right ssh keys for the servers
+func loadConfig(file string) (*conf.Config, error) {
+	cnf, err := conf.Load(file)
+	if err != nil {
+		return nil, err
+	}
+
+	// We load keys from github ids provides, and if the provider supports it we upload them if needed and append the fingerprints to the config
+
+	return cnf, nil
+}
+
+func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion string) (*ansible.Inventory, error) {
+	err := terraform.GenerateTerraform(cnf)
+	if err != nil {
+		return nil, err
 	}
 
 	//TODO we initialise here and then again in line 175, is this needed? why?
 	tf, err := terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, os.Stdout, os.Stderr)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	err = tf.Apply(ctx, conf.LoadTFExecVars())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	os.Remove(filepath.Join(cnf.BaseDir, "inventory-output.json")) //nolint
 	f, err := os.OpenFile(filepath.Join(cnf.BaseDir, "inventory-output.json"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	defer func() {
 		e := f.Close()
@@ -226,17 +248,17 @@ func initStack(ctx context.Context, file string, terraformVersion string) (*conf
 	}()
 	tf, err = terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, f, os.Stderr)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	_, err = tf.Output(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	inventory, err := ansible.GenerateInventory(cnf)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return cnf, inventory, nil
+	return inventory, nil
 }
 
 func updateNodes(cnf *conf.Config, inventory *ansible.Inventory) {
