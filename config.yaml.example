@@ -37,7 +37,7 @@ providers:
 
 cloud_provider_config:
   sudo_user: devops
-  ssh_key_github_ids: # retrieves public ssh keys under https://github.com/wfaler.keys
+  ssh_key_github_ids: # retrieves public ssh keys under https://github.com/wfaler.keys The keys will also be added to the provider, if possible
       - wfaler
   private_ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
@@ -47,7 +47,7 @@ cloud_provider_config:
     - 10.43.0.0/16
   provider_settings:
     location: fsn1
-    ssh_keys: # use Hetzner hcloud CLI tool to retrieve fingerprints: "hcloud ssh-key list"
+    ssh_keys: # (optional) use Hetzner hcloud CLI tool to retrieve fingerprints: "hcloud ssh-key list"
     - 70:67:b9:e2:d2:e6:6f:51:82:e4:6d:cc:c6:ff:26:8a
     load_balancer_type: lb11
     ssl_certificate_ids:
