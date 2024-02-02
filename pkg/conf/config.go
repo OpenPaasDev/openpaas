@@ -69,6 +69,9 @@ type TFVarsConfig struct {
 }
 
 func Load(file string) (*Config, error) {
+	fmt.Println(file)
+	fmt.Println(filepath.Abs(file))
+	fmt.Println("Loading config from file", file)
 	bytes, err := os.ReadFile(filepath.Clean(file))
 	if err != nil {
 		return nil, err

@@ -13,7 +13,6 @@ import (
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	"github.com/OpenPaasDev/openpaas/pkg/provider"
-	"github.com/OpenPaasDev/openpaas/pkg/state"
 	"github.com/OpenPaasDev/openpaas/pkg/terraform"
 )
 
@@ -56,12 +55,6 @@ func syncCmd() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
-			d := state.Init(cnf.BaseDir)
-
-			err = d.Sync(cnf, inv)
-			if err != nil {
-				panic(err)
-			}
 			err = provider.RunAll(ctx, cnf, inv)
 			if err != nil {
 				panic(err)
@@ -87,12 +80,6 @@ func bootstrap() *cobra.Command {
 				panic(err)
 			}
 			updateNodes(cnf, inv)
-			d := state.Init(cnf.BaseDir)
-
-			err = d.Sync(cnf, inv)
-			if err != nil {
-				panic(err)
-			}
 
 			err = provider.RunAll(ctx, cnf, inv)
 			if err != nil {
