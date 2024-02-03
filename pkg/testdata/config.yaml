@@ -19,6 +19,7 @@ server_groups:
     instance_type: cpx31
 providers:
   ansible:
+    sudo_user: root
     playbooks: 
     - file: playbooks/k3s.yml
       vars: 
@@ -29,8 +30,6 @@ providers:
       foo: bar
 
 cloud_provider_config:
-  internal_network_interface_name: ens10
-  sudo_user: root
   allowed_ips:
     - 85.4.84.201/32
   provider: hetzner

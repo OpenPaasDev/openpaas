@@ -19,6 +19,8 @@ server_groups:
 
 providers:
   ansible:
+    sudo_user: root
+    ssh_key_path: /home/wfaler/.ssh/id_rsa
     playbooks: 
     - file: playbooks/k3s.yml
       vars: 
@@ -27,13 +29,11 @@ providers:
       network_interface: ens10
 
 cloud_provider_config:
-  sudo_user: root
-  sudo_dir: /root
-  ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
   allowed_ips:
     - 178.197.214.192/32
   provider_settings:
+    # parameterise OS family?
     location: fsn1
     ssh_keys:
     - wfaler@chaordic.io

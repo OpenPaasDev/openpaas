@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
-	ssh "github.com/helloyi/go-sshclient"
 	"github.com/spf13/cobra"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
@@ -55,7 +53,9 @@ func syncCmd() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
-			err = provider.RunAll(ctx, cnf, inv)
+			runner := provider.DefaultRunner()
+			err = runner.RunAll(ctx, cnf, inv)
+
 			if err != nil {
 				panic(err)
 			}
@@ -79,9 +79,8 @@ func bootstrap() *cobra.Command {
 			if err != nil {
 				panic(err)
 			}
-			updateNodes(cnf, inv)
-
-			err = provider.RunAll(ctx, cnf, inv)
+			runner := provider.DefaultRunner()
+			err = runner.RunAll(ctx, cnf, inv)
 			if err != nil {
 				panic(err)
 			}
@@ -147,34 +146,4 @@ func initStack(ctx context.Context, file string) (*conf.Config, *ansible.Invento
 		return nil, nil, err
 	}
 	return cnf, inventory, nil
-}
-
-func updateNodes(cnf *conf.Config, inventory *ansible.Inventory) {
-	serverIps := []string{}
-	for k := range inventory.All.Children {
-		for _, v := range inventory.All.Children[k].Hosts {
-			serverIps = append(serverIps, v.PublicIP)
-		}
-	}
-
-	var wg sync.WaitGroup
-	for _, ip := range serverIps {
-		wg.Add(1)
-		fmt.Println(fmt.Sprintf("%s:22", ip))
-		go func(ip string) {
-			client, err := ssh.DialWithKey(fmt.Sprintf("%s:22", ip), cnf.CloudProviderConfig.User, cnf.CloudProviderConfig.SSHKey)
-			defer client.Close() //nolint
-			if err != nil {
-				panic(err)
-			}
-			script := client.Cmd("sudo apt-get update").Cmd("sudo apt-get upgrade -y")
-			script.SetStdio(os.Stdout, os.Stderr)
-			err = script.Run()
-			if err != nil {
-				fmt.Println(err)
-			}
-			wg.Done()
-		}(ip)
-	}
-	wg.Wait()
 }

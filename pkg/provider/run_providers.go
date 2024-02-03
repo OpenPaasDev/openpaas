@@ -7,13 +7,25 @@ import (
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
 )
 
-func RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error {
-	providers := map[string]Service{
-		"ansible": &Ansible{},
+type Runner interface {
+	RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error
+}
+type defaultRunner struct {
+	providers map[string]Service
+}
+
+func DefaultRunner() Runner {
+	return &defaultRunner{
+		providers: map[string]Service{
+			"ansible": &Ansible{},
+		},
 	}
+}
+
+func (runner *defaultRunner) RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error {
 	for k, providerConfig := range cnf.Providers {
-		if _, ok := providers[k]; ok {
-			err := providers[k].Run(ctx, cnf, providerConfig, inventory)
+		if _, ok := runner.providers[k]; ok {
+			err := runner.providers[k].Run(ctx, providerConfig, inventory)
 			if err != nil {
 				return err
 			}
