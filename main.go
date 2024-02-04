@@ -34,7 +34,7 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(bootstrap(), syncCmd())
+	rootCmd.AddCommand(syncCmd())
 	err = rootCmd.Execute()
 	if err != nil {
 		fmt.Println(err)
