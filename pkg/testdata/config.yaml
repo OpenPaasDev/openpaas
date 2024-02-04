@@ -25,6 +25,8 @@ providers:
       vars: 
         network_interface: ens10
         bar: foo
+        env_var: FOO
+        ambiguous_var: BAR
     global_vars:
       network_interface: ens10
       foo: bar
