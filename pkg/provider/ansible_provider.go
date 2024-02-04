@@ -3,8 +3,10 @@ package provider
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
+	"github.com/OpenPaasDev/openpaas/pkg/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,5 +61,29 @@ func asAnsibleConfig(providerConfig interface{}) (*AnsibleConfig, error) {
 }
 
 func generateVarsFile(vars map[string]string, globalVars map[string]string) (string, error) {
-	return "", nil
+	outputMap := make(map[string]string)
+	for k, v := range globalVars {
+		if v == strings.ToUpper(v) && os.Getenv(v) != "" {
+			outputMap[k] = os.Getenv(v)
+		} else {
+			outputMap[k] = v
+		}
+	}
+	for k, v := range vars {
+		if v == strings.ToUpper(v) && os.Getenv(v) != "" {
+			outputMap[k] = os.Getenv(v)
+		} else {
+			outputMap[k] = v
+		}
+	}
+	yamlData, err := yaml.Marshal(outputMap)
+	if err != nil {
+		return "", err
+	}
+	fileName := util.RandString(15)
+	err = os.WriteFile(fileName, yamlData, 0644) //nolint
+	if err != nil {
+		return "", err
+	}
+	return fileName, nil
 }
