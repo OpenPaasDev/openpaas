@@ -67,31 +67,6 @@ func syncCmd() *cobra.Command {
 	return cmd
 }
 
-func bootstrap() *cobra.Command {
-	var configFile string
-	cmd := &cobra.Command{
-		Use:   "bootstrap",
-		Short: "Bootstrap your platform",
-		Long:  `bootstrap the platform`,
-		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			cnf, inv, err := initStack(ctx, configFile)
-			if err != nil {
-				panic(err)
-			}
-			runner := provider.DefaultRunner()
-			err = runner.RunAll(ctx, cnf, inv)
-			if err != nil {
-				panic(err)
-			}
-		},
-	}
-
-	addFlags(cmd, &configFile)
-
-	return cmd
-}
-
 func addFlags(cmd *cobra.Command, file *string) {
 	cmd.Flags().StringVarP(file, "config.file", "f", "", "configuration file")
 
