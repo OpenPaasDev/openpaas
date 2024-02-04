@@ -1,20 +1,24 @@
 package conf
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 we need md5 as this is how hetzner calculates fingerprints
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
+
+	"golang.org/x/net/context"
+
+	"golang.org/x/crypto/ssh"
 )
 
-func UpdateConfigWithGithubKeys(cnf *Config) (*Config, error) {
+func UpdateConfigWithGithubKeys(ctx context.Context, cnf *Config) (*Config, error) {
 	// get the github ids in the config, retrieve the keys
 	for _, user := range cnf.CloudProviderConfig.GithubIds {
-		keys, err := fetchGitHubKeys(user)
+		keys, err := fetchGitHubKeys(ctx, user)
 		if err != nil {
 			return nil, err
 		}
@@ -45,15 +49,24 @@ func UpdateConfigWithGithubKeys(cnf *Config) (*Config, error) {
 	return cnf, nil
 }
 
-func fetchGitHubKeys(githubUser string) ([]string, error) {
-	url := "https://github.com/" + githubUser + ".keys"
-	resp, err := http.Get(url)
+func fetchGitHubKeys(ctx context.Context, githubUser string) ([]string, error) {
+	const baseURL = "https://github.com"
+	fullURL := fmt.Sprintf("%s/%s.keys", baseURL, url.PathEscape(githubUser))
+	// #nosec G107 we are loading a dynamic url in purpose
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// we need to close the body to avoid issues, but linter complains if we ignore the error case
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New(fmt.Sprintf("received non-200 status code: %d", resp.StatusCode))
@@ -73,6 +86,7 @@ func generateFingerprint(key string) (string, error) {
 		return "", err
 	}
 
+	// #nosec G401 we need md5 as this is how hetzner calculates fingerprints
 	hash := md5.Sum(publicKey.Marshal())
 	fingerprint := insertColons(hex.EncodeToString(hash[:]))
 	return fingerprint, nil
