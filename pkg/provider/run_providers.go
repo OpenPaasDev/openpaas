@@ -17,7 +17,7 @@ type defaultRunner struct {
 func DefaultRunner() Runner {
 	return &defaultRunner{
 		providers: map[string]Service{
-			"ansible": &Ansible{},
+			"ansible": &Ansible{makeClient: ansible.NewClient},
 		},
 	}
 }

@@ -27,8 +27,5 @@ func (client *ansibleClient) Run(playbookFile string, varFile string) error {
 	if varFile != "" {
 		return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s -e @%s ", playbookFile, client.inventory, client.user, varFile), os.Stdout)
 	}
-	if varFile == "" {
-		return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s", playbookFile, client.inventory, client.user), os.Stdout)
-	}
-	return fmt.Errorf("insufficient client configuration provided")
+	return runtime.Exec(&runtime.EmptyEnv{}, fmt.Sprintf("ansible-playbook %s -i %s -u %s", playbookFile, client.inventory, client.user), os.Stdout)
 }

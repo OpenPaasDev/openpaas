@@ -7,7 +7,9 @@ import (
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
 )
 
-type Ansible struct{}
+type Ansible struct {
+	makeClient func(inventoryFile string, sudoUser string) ansible.Client
+}
 
 type AnsibleConfig struct {
 	SudoUser   string            `yaml:"sudo_user"`
@@ -25,7 +27,7 @@ func (s *Ansible) Run(ctx context.Context, providerConfig interface{}, inventory
 	if err != nil {
 		return err
 	}
-	ansibleClient := ansible.NewClient(inventory.Path, conf.SudoUser)
+	ansibleClient := s.makeClient(inventory.Path, conf.SudoUser)
 	for _, playbook := range conf.Playbooks {
 		varsFile, err := generateVarsFile(playbook.Vars, conf.GlobalVars)
 		if err != nil {
