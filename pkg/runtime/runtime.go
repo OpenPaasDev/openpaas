@@ -68,6 +68,7 @@ func HasDependencies() bool {
 		"ansible-playbook",
 		"cfssl",
 		"openssl",
+		"hcloud",
 	}
 
 	var b bytes.Buffer

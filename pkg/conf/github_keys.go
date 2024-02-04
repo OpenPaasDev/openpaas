@@ -15,14 +15,20 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type GithubKey struct {
+	PublicKey   string
+	Fingerprint string
+}
+
 func UpdateConfigWithGithubKeys(ctx context.Context, cnf *Config) (*Config, error) {
+	var githubKeys []GithubKey
 	// get the github ids in the config, retrieve the keys
 	for _, user := range cnf.CloudProviderConfig.GithubIds {
 		keys, err := fetchGitHubKeys(ctx, user)
 		if err != nil {
 			return nil, err
 		}
-		// convert the keys to fingerprints
+		// convert the keys to fingerprints and store the data
 		var fingerprints []string
 		for _, key := range keys {
 			fprint, err := generateFingerprint(key)
@@ -30,6 +36,7 @@ func UpdateConfigWithGithubKeys(ctx context.Context, cnf *Config) (*Config, erro
 				return nil, err
 			}
 			fingerprints = append(fingerprints, fprint)
+			githubKeys = append(githubKeys, GithubKey{key, fprint})
 		}
 		// add the fingerprints to the config
 		if sshKeys, ok := cnf.CloudProviderConfig.ProviderSettings["ssh_keys"]; ok {
@@ -45,6 +52,8 @@ func UpdateConfigWithGithubKeys(ctx context.Context, cnf *Config) (*Config, erro
 			// Create ssh_keys with the new keys if it doesn't exist
 			cnf.CloudProviderConfig.ProviderSettings["ssh_keys"] = fingerprints
 		}
+		// add the github keys we obtained, in case we need to upload them to the provider
+		cnf.CloudProviderConfig.GithubKeys = githubKeys
 	}
 	return cnf, nil
 }

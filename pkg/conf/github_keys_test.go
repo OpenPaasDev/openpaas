@@ -33,11 +33,16 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq
 
 	// remove ssh keys defined
 	conf.CloudProviderConfig.ProviderSettings["ssh_keys"] = []string{}
-	expected := []string{"ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22", "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"}
+	expectedFingerprints := []string{"ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22", "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"}
+	expectedGithubKeys := []GithubKey{
+		{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH0p7vluS7ldSFDBYx9ZXVQcsJdWIoSTVvqhcakKDQ34 user@example.com", "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22"},
+		{"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
+	}
 
 	conf, err = UpdateConfigWithGithubKeys(ctx, conf)
 	require.NoError(t, err)
-	assert.Contains(t, conf.CloudProviderConfig.ProviderSettings["ssh_keys"], expected)
+	assert.Contains(t, expectedFingerprints, conf.CloudProviderConfig.ProviderSettings["ssh_keys"])
+	assert.Equal(t, expectedGithubKeys, conf.CloudProviderConfig.GithubKeys)
 }
 
 func UpdateConfigWithGithubKeys_KeysInConfig(t *testing.T) {
@@ -60,11 +65,16 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq
 
 	// we expect the github keys to be added to the ssh keys defined in the config
 	configKeys := conf.CloudProviderConfig.ProviderSettings["ssh_keys"].([]string)
-	expected := append(configKeys, []string{"ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22", "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"}...)
+	expectedFingerprints := append(configKeys, []string{"ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22", "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"}...)
+	expectedGithubKeys := []GithubKey{
+		{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH0p7vluS7ldSFDBYx9ZXVQcsJdWIoSTVvqhcakKDQ34 user@example.com", "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22"},
+		{"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
+	}
 
 	conf, err = UpdateConfigWithGithubKeys(ctx, conf)
 	require.NoError(t, err)
-	assert.Contains(t, conf.CloudProviderConfig.ProviderSettings["ssh_keys"], expected)
+	assert.Contains(t, expectedFingerprints, conf.CloudProviderConfig.ProviderSettings["ssh_keys"])
+	assert.Equal(t, expectedGithubKeys, conf.CloudProviderConfig.GithubKeys)
 }
 
 func TestFetchGitHubKeys(t *testing.T) {
