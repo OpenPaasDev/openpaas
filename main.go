@@ -51,6 +51,7 @@ import (
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
+	"github.com/OpenPaasDev/openpaas/pkg/platform"
 	"github.com/OpenPaasDev/openpaas/pkg/provider"
 	"github.com/OpenPaasDev/openpaas/pkg/state"
 	"github.com/OpenPaasDev/openpaas/pkg/terraform"
@@ -193,7 +194,12 @@ func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
 }
 
 func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
-	cnf, err := loadConfig(file)
+	cnf, err := loadConfig(ctx, file)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = platform.RunPreparation(ctx, cnf)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -203,18 +209,23 @@ func initStack(ctx context.Context, file string, terraformVersion string) (*conf
 		return nil, nil, err
 	}
 
+	err = platform.RunCleanup(ctx, cnf)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return cnf, inventory, nil
 }
 
 // loads the config file (yaml) and does any prep work needed before we use that config with Terraform and Ansible
 // for example, it takes care of setting the right ssh keys for the servers
-func loadConfig(file string) (*conf.Config, error) {
+func loadConfig(ctx context.Context, file string) (*conf.Config, error) {
 	cnf, err := conf.Load(file)
 	if err != nil {
 		return nil, err
 	}
 
-	cnf, err = conf.UpdateConfigWithGithubKeys(cnf)
+	cnf, err = conf.UpdateConfigWithGithubKeys(ctx, cnf)
 	if err != nil {
 		return nil, err
 	}
