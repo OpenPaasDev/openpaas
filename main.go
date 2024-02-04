@@ -214,7 +214,10 @@ func loadConfig(file string) (*conf.Config, error) {
 		return nil, err
 	}
 
-	// We load keys from github ids provides, and if the provider supports it we upload them if needed and append the fingerprints to the config
+	cnf, err = conf.UpdateConfigWithGithubKeys(cnf)
+	if err != nil {
+		return nil, err
+	}
 
 	return cnf, nil
 }
