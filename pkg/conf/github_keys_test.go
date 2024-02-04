@@ -85,7 +85,9 @@ func TestFetchGitHubKeys(t *testing.T) {
 
 	// Mock response
 	payload := `ssh-rsa AAAAB3Nza... user@example.com
-ssh-rsa BBBBA3Nza... user@main.com`
+
+ssh-rsa BBBBA3Nza... user@main.com
+`
 
 	httpmock.RegisterResponder("GET", "https://github.com/exampleUser.keys",
 		httpmock.NewStringResponder(200, payload))

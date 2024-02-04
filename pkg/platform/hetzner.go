@@ -94,12 +94,14 @@ func fetchHetznerKeys() ([]HetznerSSHKey, error) {
 }
 
 func eraseKeyFromHetzner(keyId string) error {
+	fmt.Println("Erasing from Hetzner key", keyId)
 	// #nosec G204 we know the input we are sending to this command
 	_, err := exec.Command("hcloud", "ssh-key", "delete", keyId).Output()
 	return err
 }
 
 func uploadKeyToHetzner(key conf.GithubKey, name string) error {
+	fmt.Println("Uploading to Hetzner key", name, "with fingerprint", key.Fingerprint)
 	// #nosec G204 we know the input we are sending to this command
 	_, err := exec.Command("hcloud", "ssh-key", "create", "--name", name, "--public-key", key.PublicKey).Output()
 	return err

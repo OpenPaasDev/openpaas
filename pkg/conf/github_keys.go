@@ -86,7 +86,15 @@ func fetchGitHubKeys(ctx context.Context, githubUser string) ([]string, error) {
 		return nil, err
 	}
 
-	return strings.Split(string(body), "\n"), nil
+	keys := strings.Split(string(body), "\n")
+	// Filter out empty strings
+	var nonEmptyKeys []string
+	for _, part := range keys {
+		if part != "" {
+			nonEmptyKeys = append(nonEmptyKeys, part)
+		}
+	}
+	return nonEmptyKeys, nil
 }
 
 func generateFingerprint(key string) (string, error) {
