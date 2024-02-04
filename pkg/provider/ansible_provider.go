@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
+	"gopkg.in/yaml.v3"
 )
 
 type Ansible struct {
@@ -45,7 +46,16 @@ func (s *Ansible) Run(ctx context.Context, providerConfig interface{}, inventory
 }
 
 func asAnsibleConfig(providerConfig interface{}) (*AnsibleConfig, error) {
-	return nil, nil
+	yamlData, err := yaml.Marshal(providerConfig)
+	if err != nil {
+		return nil, err
+	}
+	var cnf AnsibleConfig
+	err = yaml.Unmarshal(yamlData, &cnf)
+	if err != nil {
+		return nil, err
+	}
+	return &cnf, nil
 }
 
 func generateVarsFile(vars map[string]string, globalVars map[string]string) (string, error) {

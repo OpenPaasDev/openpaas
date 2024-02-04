@@ -25,8 +25,10 @@ providers:
       vars: 
         network_interface: ens10
         bar: foo
+        foo: baz
         env_var: FOO
         ambiguous_var: BAR
+    - file: playbooks/postgres.yml
     global_vars:
       network_interface: ens10
       foo: bar
