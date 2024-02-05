@@ -224,7 +224,7 @@ func loadConfig(ctx context.Context, file string) (*conf.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	//-- teh code is passing the ssh id not fingerprint to ssh_keys?? can we remove ssh_import_id from cloud=-init
 	cnf, err = conf.UpdateConfigWithGithubKeys(ctx, cnf)
 	if err != nil {
 		return nil, err

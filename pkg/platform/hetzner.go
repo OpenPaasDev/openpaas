@@ -38,7 +38,7 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) (*conf.Con
 		name := parts[1]
 		nLen := len(name)
 		if nLen > 10 {
-			name = name[nLen-10:]
+			name = KeyPrefix + name[nLen-10:]
 		}
 
 		err := uploadKeyToHetzner(key, name)
@@ -51,6 +51,8 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) (*conf.Con
 	return nil, nil
 }
 
+const KeyPrefix string = "gh-key-"
+
 func findChangesToMake(keysInHetzner []HetznerSSHKey, githubKeys []conf.GithubKey) ([]string, []conf.GithubKey) {
 	// find any keys in github not in hetzner
 	var keysToUpload []conf.GithubKey
@@ -60,10 +62,10 @@ func findChangesToMake(keysInHetzner []HetznerSSHKey, githubKeys []conf.GithubKe
 		}
 	}
 
-	// find keys in hetzner not in github
+	// find keys in hetzner that were uploaded as gh-keys and are not in github anymore
 	var keysToErase []string
 	for _, k := range keysInHetzner {
-		if !isInGithub(githubKeys, k.Fingerprint) {
+		if !isInGithub(githubKeys, k.Fingerprint) && strings.HasPrefix(k.Name, KeyPrefix) {
 			keysToErase = append(keysToErase, strconv.Itoa(int(k.ID)))
 		}
 	}
