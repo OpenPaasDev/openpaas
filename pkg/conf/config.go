@@ -13,15 +13,10 @@ type Config struct {
 	DC                  string                 `yaml:"dc_name"`
 	BaseDir             string                 `yaml:"base_dir"`
 	OrgName             string                 `yaml:"org_name"`
-	Providers           []ProviderConfig       `yaml:"providers"`
+	Providers           map[string]interface{} `yaml:"providers"`
 	CloudProviderConfig CloudProvider          `yaml:"cloud_provider_config"`
 	ServerGroups        map[string]ServerGroup `yaml:"server_groups"`
 	Services            map[string]interface{} `yaml:"services"`
-}
-
-type ProviderConfig struct {
-	Name   string                 `yaml:"name"`
-	Config map[string]interface{} `yaml:"config"`
 }
 
 type ServerGroup struct {
@@ -47,12 +42,9 @@ type ClientVolume struct {
 }
 
 type CloudProvider struct {
-	User             string                 `yaml:"sudo_user"`
-	Dir              string                 `yaml:"sudo_dir"`
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`
-	SSHKey           string                 `yaml:"ssh_key"`
 }
 
 type HetznerResourceNames struct {
@@ -74,6 +66,9 @@ type TFVarsConfig struct {
 }
 
 func Load(file string) (*Config, error) {
+	fmt.Println(file)
+	fmt.Println(filepath.Abs(file))
+	fmt.Println("Loading config from file", file)
 	bytes, err := os.ReadFile(filepath.Clean(file))
 	if err != nil {
 		return nil, err

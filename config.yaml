@@ -18,33 +18,22 @@ server_groups:
     instance_type: cx21
 
 providers:
-  - name: k3s
-    config:
-      cluster_name: k8s
-      server_group: server
-      agent_groups: 
-      - agent
-      internal_network_interface_name: ens10 
-  - name: ansible
-    config:
-      groups:
-      - name: bootstrap
-        lifecycle: bootstrap 
-        folder: bootstrap_playbooks
-      - name: sync
-        lifecycle: always 
-        folder: playbooks
+  ansible:
+    sudo_user: root
+    ssh_key_path: /home/wfaler/.ssh/id_rsa
+    playbooks: 
+    - file: playbooks/k3s.yml
+      vars: 
+        network_interface: ens10
+    global_vars:
+      network_interface: ens10
 
 cloud_provider_config:
-  sudo_user: root
-  sudo_dir: /root
-  ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
   allowed_ips:
-    - 178.194.90.93/32
-    - 10.42.0.0/16
-    - 10.43.0.0/16
+    - 178.197.214.192/32
   provider_settings:
+    # parameterise OS family?
     location: fsn1
     ssh_keys:
     - wfaler@chaordic.io
