@@ -34,8 +34,7 @@ type CloudInitConfig struct {
 }
 
 type UserConfig struct {
-	Name      string   `yaml:"name"`
-	ImportIds []string `yaml:"ssh_import_id"`
+	Name string `yaml:"name"`
 }
 
 func TestGenerateTerraform(t *testing.T) {
@@ -104,5 +103,4 @@ func TestGenerateTerraform(t *testing.T) {
 
 	assert.Len(t, cloudInit.Users, 1)
 	assert.Equal(t, "root", cloudInit.Users[0].Name)
-	assert.Equal(t, []string{"gh:wfaler", "gh:pvillega"}, cloudInit.Users[0].ImportIds)
 }

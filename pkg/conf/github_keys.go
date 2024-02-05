@@ -22,14 +22,16 @@ type GithubKey struct {
 
 func UpdateConfigWithGithubKeys(ctx context.Context, cnf *Config) (*Config, error) {
 	var githubKeys []GithubKey
+	var fingerprints []string
+
 	// get the github ids in the config, retrieve the keys
 	for _, user := range cnf.CloudProviderConfig.GithubIds {
 		keys, err := fetchGitHubKeys(ctx, user)
 		if err != nil {
 			return nil, err
 		}
+
 		// convert the keys to fingerprints and store the data
-		var fingerprints []string
 		for _, key := range keys {
 			fprint, err := generateFingerprint(key)
 			if err != nil {
@@ -38,23 +40,18 @@ func UpdateConfigWithGithubKeys(ctx context.Context, cnf *Config) (*Config, erro
 			fingerprints = append(fingerprints, fprint)
 			githubKeys = append(githubKeys, GithubKey{key, fprint})
 		}
-		// add the fingerprints to the config
-		if sshKeys, ok := cnf.CloudProviderConfig.ProviderSettings["ssh_keys"]; ok {
-			// checks the value in the map is a slice of string
-			switch keys := sshKeys.(type) {
-			case []string:
-				cnf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append(keys, fingerprints...)
-			default:
-				// Handle the case where ssh_keys exists but is not a slice of strings, which would be wrong
-				cnf.CloudProviderConfig.ProviderSettings["ssh_keys"] = fingerprints
-			}
-		} else {
-			// Create ssh_keys with the new keys if it doesn't exist
-			cnf.CloudProviderConfig.ProviderSettings["ssh_keys"] = fingerprints
-		}
-		// add the github keys we obtained, in case we need to upload them to the provider
-		cnf.CloudProviderConfig.GithubKeys = githubKeys
 	}
+	// add the github keys we obtained, in case we need to upload them to the provider
+	cnf.CloudProviderConfig.GithubKeys = githubKeys
+
+	// the yaml loaded entry is a []interface{} not []string{} so we need to convert it, if present
+	var sshKeysFromConfig []string
+	if sshKeys, ok := cnf.CloudProviderConfig.ProviderSettings["ssh_keys"]; ok {
+		sshKeysFromConfig = interfaceToStringSlice(sshKeys.([]interface{}))
+	}
+	// append fingerprints to provided ssh_keys
+	cnf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append(sshKeysFromConfig, fingerprints...)
+
 	return cnf, nil
 }
 
@@ -118,4 +115,15 @@ func insertColons(s string) string {
 		sb.WriteByte(s[i])
 	}
 	return sb.String()
+}
+
+func interfaceToStringSlice(in []interface{}) []string {
+	var slice []string
+	for _, key := range in {
+		strKey, ok := key.(string)
+		if ok {
+			slice = append(slice, strKey)
+		}
+	}
+	return slice
 }

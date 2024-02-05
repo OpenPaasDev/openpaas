@@ -40,7 +40,6 @@ cloud_provider_config:
   sudo_user: root
   ssh_key_github_ids:
     - wfaler
-    - pvillega
   private_ssh_key: /home/wfaler/.ssh/id_rsa
   allowed_ips:
     - 85.4.84.201/32

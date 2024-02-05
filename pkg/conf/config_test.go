@@ -18,7 +18,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, "config", conf.BaseDir)
 	assert.Equal(t, "hetzner", conf.DC)
 	assert.Equal(t, "root", conf.CloudProviderConfig.User)
-	assert.Equal(t, []string{"wfaler", "pvillega"}, conf.CloudProviderConfig.GithubIds)
+	assert.Equal(t, []string{"wfaler"}, conf.CloudProviderConfig.GithubIds)
 	assert.Equal(t, "/home/wfaler/.ssh/id_rsa", conf.CloudProviderConfig.SSHKey)
 	assert.Equal(t, "hetzner", conf.CloudProviderConfig.Provider)
 

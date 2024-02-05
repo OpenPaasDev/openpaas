@@ -4,7 +4,6 @@ users:
     groups: users, admin
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
-    ssh_import_id: [{{ range $key, $value := .CloudProviderConfig.GithubIds }}"gh:{{ $value }}",{{ end }}]
 package_update: true
 package_upgrade: true
 # default packages we want to enable always, for security, like fail2ban
