@@ -17,19 +17,14 @@ var hetznerMain string
 //go:embed templates/hetzner/vars.tf
 var hetznerVars string
 
-//go:embed templates/hetzner/cloud-init.yml
-var cloudInit string
-
 func GenerateTerraform(config *conf.Config) error {
 	settings := map[string]struct {
-		Main      string
-		Vars      string
-		CloudInit string
+		Main string
+		Vars string
 	}{
 		"hetzner": {
-			Main:      hetznerMain,
-			Vars:      hetznerVars,
-			CloudInit: cloudInit,
+			Main: hetznerMain,
+			Vars: hetznerVars,
 		},
 	}
 
@@ -53,16 +48,6 @@ func GenerateTerraform(config *conf.Config) error {
 		return err
 	}
 
-	tmplCloudInit, e := template.New("cloud-init").Parse(tfSettings.CloudInit)
-	if e != nil {
-		return e
-	}
-	var bufCloudInit bytes.Buffer
-	err = tmplCloudInit.Execute(&bufCloudInit, config)
-	if err != nil {
-		return err
-	}
-
 	err = os.MkdirAll(filepath.Clean(filepath.Join(config.BaseDir, "terraform")), 0750)
 	if err != nil {
 		return err
@@ -74,10 +59,6 @@ func GenerateTerraform(config *conf.Config) error {
 		return err
 	}
 	err = os.WriteFile(filepath.Clean(filepath.Join(folder, "main.tf")), []byte(hetznerMain), 0600)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Clean(filepath.Join(folder, "cloud-init.yml")), bufCloudInit.Bytes(), 0600)
 	if err != nil {
 		return err
 	}

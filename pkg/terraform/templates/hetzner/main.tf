@@ -147,7 +147,6 @@ resource "hcloud_server" "server_node" {
   }
 
   ssh_keys = [for id in var.ssh_keys : id]
-  user_data  = file("cloud-init.yml")
 
   # don't destroy existing machines if some data changes
   lifecycle {
