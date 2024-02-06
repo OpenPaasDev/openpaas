@@ -2,8 +2,9 @@ package platform
 
 import (
 	"errors"
-	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	"testing"
+
+	"github.com/OpenPaasDev/openpaas/pkg/conf"
 
 	"github.com/jarcoal/httpmock"
 
@@ -92,7 +93,7 @@ func TestRunPreparationLogic_PropagatesReadKeysErrors(t *testing.T) {
 	}
 
 	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
-	require.Error(t, expected, err)
+	require.ErrorIs(t, expected, err)
 }
 
 func TestRunPreparationLogic_PropagatesReadGithubErrors(t *testing.T) {
@@ -138,7 +139,7 @@ func TestRunPreparationLogic_PropagatesReadGithubErrors(t *testing.T) {
 		return nil
 	}
 	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
-	require.Error(t, expected, err)
+	require.ErrorIs(t, expected, err)
 }
 
 func TestRunPreparationLogic_PropagatesEraseKeyErrors(t *testing.T) {
@@ -182,7 +183,7 @@ func TestRunPreparationLogic_PropagatesEraseKeyErrors(t *testing.T) {
 		return nil
 	}
 	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
-	require.Error(t, expected, err)
+	require.ErrorIs(t, expected, err)
 }
 
 func TestRunPreparationLogic_PropagatesUploadKeyErrors(t *testing.T) {
@@ -225,7 +226,7 @@ func TestRunPreparationLogic_PropagatesUploadKeyErrors(t *testing.T) {
 	}
 
 	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
-	require.Error(t, expected, err)
+	require.ErrorIs(t, expected, err)
 }
 
 func TestFetchGitHubKeys(t *testing.T) {
