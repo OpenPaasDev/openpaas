@@ -39,10 +39,6 @@ func GenerateTerraform(config *conf.Config) error {
 	}
 	var bufVars bytes.Buffer
 
-	//TODO do we use this allowedIps at all??
-	allowedIps := []string{}
-	config.CloudProviderConfig.ProviderSettings["https_allowed_ips"] = allowedIps
-
 	err := tmplVars.Execute(&bufVars, config)
 	if err != nil {
 		return err

@@ -13,7 +13,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func TestRunPreparationLogic_UpdatesConfigAndErasesOldKeys(t *testing.T) {
+func TestRunPreparationLogic_UpdatesConfigAndKeys(t *testing.T) {
 	ctx := context.Background()
 	cnf, err := conf.Load("../testdata/config.yaml")
 	require.NoError(t, err)
@@ -54,14 +54,18 @@ func TestRunPreparationLogic_UpdatesConfigAndErasesOldKeys(t *testing.T) {
 		uploadedNames = append(uploadedNames, name)
 		return nil
 	}
+	getPublicIp := func(context.Context) (string, error) {
+		return "1.1.1.1", nil
+	}
 
-	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
+	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
 	require.NoError(t, err)
 	assert.Equal(t, []uint32{1, 2}, erasedId)
 	assert.Equal(t, githubKeys, uploadedKeys)
 	assert.Equal(t, []string{"gh-key-xample.com", "gh-key-r@main.com"}, uploadedNames)
 	// 123456 from config, plus uploaded gh keys
 	assert.Equal(t, []string{"123456", "3", "4"}, cnf.CloudProviderConfig.ProviderSettings["ssh_keys"])
+	assert.Equal(t, []string{"85.4.84.201/32", "1.1.1.1/32"}, cnf.CloudProviderConfig.AllowedIPs)
 }
 
 func TestRunPreparationLogic_PropagatesReadKeysErrors(t *testing.T) {
@@ -91,8 +95,11 @@ func TestRunPreparationLogic_PropagatesReadKeysErrors(t *testing.T) {
 		uploadedNames = append(uploadedNames, name)
 		return nil
 	}
+	getPublicIp := func(context.Context) (string, error) {
+		return "1.1.1.1", nil
+	}
 
-	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
+	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
 	require.ErrorIs(t, expected, err)
 }
 
@@ -138,7 +145,10 @@ func TestRunPreparationLogic_PropagatesReadGithubErrors(t *testing.T) {
 		uploadedNames = append(uploadedNames, name)
 		return nil
 	}
-	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
+	getPublicIp := func(context.Context) (string, error) {
+		return "1.1.1.1", nil
+	}
+	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
 	require.ErrorIs(t, expected, err)
 }
 
@@ -182,7 +192,10 @@ func TestRunPreparationLogic_PropagatesEraseKeyErrors(t *testing.T) {
 		uploadedNames = append(uploadedNames, name)
 		return nil
 	}
-	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
+	getPublicIp := func(context.Context) (string, error) {
+		return "1.1.1.1", nil
+	}
+	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
 	require.ErrorIs(t, expected, err)
 }
 
@@ -224,8 +237,61 @@ func TestRunPreparationLogic_PropagatesUploadKeyErrors(t *testing.T) {
 	uploadHetznerKey := func(key string, name string) error {
 		return expected
 	}
+	getPublicIp := func(context.Context) (string, error) {
+		return "1.1.1.1", nil
+	}
 
-	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey)
+	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
+	require.ErrorIs(t, expected, err)
+}
+
+func TestRunPreparationLogic_PropagatesGetIPErrors(t *testing.T) {
+	ctx := context.Background()
+	cnf, err := conf.Load("../testdata/config.yaml")
+	require.NoError(t, err)
+
+	expected := errors.New("Fail")
+	githubKeys := []string{"ssh-rsa AAAAB3Nza1234567890AAAAB3Nza user@example.com", "ssh-rsa BBBBA3Nza1234567890BBBBA3Nza user@main.com"}
+	hetznerKeys := []HetznerSSHKey{
+		{ID: 0, Name: "old_key", Fingerprint: "abc"},
+		{ID: 1, Name: GHKeyPrefix + "old_key", Fingerprint: "abc"},
+		{ID: 2, Name: GHKeyPrefix + "old_key2", Fingerprint: "abcd"},
+	}
+	hetznerKeys2 := []HetznerSSHKey{
+		{ID: 0, Name: "old_key", Fingerprint: "abc"},
+		{ID: 3, Name: GHKeyPrefix + "new_key", Fingerprint: "abc"},
+		{ID: 4, Name: GHKeyPrefix + "new_key2", Fingerprint: "abcd"},
+	}
+	var erasedId []uint32
+	var uploadedKeys []string
+	var uploadedNames []string
+
+	called := false
+	getHetznerKeys := func() ([]HetznerSSHKey, error) {
+		if !called {
+			called = true
+			return hetznerKeys, nil
+		} else {
+			return hetznerKeys2, nil
+		}
+	}
+	getGithubKeys := func(context.Context, string) ([]string, error) {
+		return githubKeys, nil
+	}
+	eraseHetznerKey := func(k HetznerSSHKey) error {
+		erasedId = append(erasedId, k.ID)
+		return nil
+	}
+	uploadHetznerKey := func(key string, name string) error {
+		uploadedKeys = append(uploadedKeys, key)
+		uploadedNames = append(uploadedNames, name)
+		return nil
+	}
+	getPublicIp := func(context.Context) (string, error) {
+		return "", expected
+	}
+
+	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
 	require.ErrorIs(t, expected, err)
 }
 

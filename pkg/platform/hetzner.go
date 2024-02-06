@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/OpenPaasDev/openpaas/pkg/util"
+
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	"golang.org/x/net/context"
 )
@@ -26,7 +28,7 @@ func (s *Hetzner) Cleanup(context.Context, *conf.Config) error {
 
 func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
 	fmt.Println("Preparing Hetzner platform...")
-	err := runPreparationLogic(ctx, conf, fetchHetznerKeys, fetchGitHubKeys, eraseKeyFromHetzner, uploadKeyToHetzner)
+	err := runPreparationLogic(ctx, conf, fetchHetznerKeys, fetchGitHubKeys, eraseKeyFromHetzner, uploadKeyToHetzner, util.GetPublicIP)
 	if err != nil {
 		return err
 	}
@@ -45,6 +47,7 @@ func runPreparationLogic(ctx context.Context,
 	getGithubKeys func(context.Context, string) ([]string, error),
 	eraseHetznerKey func(HetznerSSHKey) error,
 	uploadHetznerKey func(string, string) error,
+	getPublicIp func(context.Context) (string, error),
 ) error {
 	keysInHetzner, err := getHetznerKeys()
 	if err != nil {
@@ -108,6 +111,14 @@ func runPreparationLogic(ctx context.Context,
 
 	// update the config adding the github key ids to any existing config in place
 	conf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append(keyIdsFromConfig, githubIds...)
+
+	// update allowed ips record with the current public ip
+	ip, err := getPublicIp(ctx)
+	if err != nil {
+		return err
+	}
+	conf.CloudProviderConfig.AllowedIPs = append(conf.CloudProviderConfig.AllowedIPs, ip+"/32")
+
 	return nil
 }
 
