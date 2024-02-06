@@ -208,9 +208,12 @@ func GenerateInventory(config *conf.Config) (*Inventory, error) {
 		return nil, err
 	}
 
-	err = os.WriteFile(filepath.Clean(filepath.Join(config.BaseDir, "inventory")), bytes, 0600)
+	invPath := filepath.Clean(filepath.Join(config.BaseDir, "inventory"))
+	err = os.WriteFile(invPath, bytes, 0600)
 	if err != nil {
 		return nil, err
 	}
+
+	inv.Path = invPath
 	return &inv, nil
 }

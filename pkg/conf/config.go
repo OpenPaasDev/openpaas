@@ -42,7 +42,7 @@ type ClientVolume struct {
 }
 
 type CloudProvider struct {
-	GithubIds        []string               `yaml:"ssh_key_github_ids"`
+	GithubIds        []string               `yaml:"github_ids"`
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`

@@ -56,3 +56,4 @@ profile.cov
 
 # exclude config
 config.yaml
+playbooks

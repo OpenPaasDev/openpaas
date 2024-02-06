@@ -34,7 +34,7 @@ providers:
       foo: bar
 
 cloud_provider_config:
-  ssh_key_github_ids:
+  github_ids:
     - wfaler
   allowed_ips:
     - 85.4.84.201/32

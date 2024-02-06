@@ -2,9 +2,8 @@ package ansible
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/OpenPaasDev/openpaas/pkg/runtime"
+	"os"
 )
 
 type Client interface {

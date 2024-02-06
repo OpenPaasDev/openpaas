@@ -15,8 +15,9 @@ Ties together Terraform, Ansible and Runtime execution of commands (local) to cr
 - Your `Hetzner` token must be available as the environment variable `HETZNER_TOKEN`
 - You must provide your config in `config.yaml`
   - in `cloud_provider_config`> `allowed_ips` you must have the IP of the machine doing the deployment, otherwise the firewall will block the connection
-  - in `cloud_provider_config`> `provider_settings` > `ssh_keys` you must have the fingerprint of at least 1 ssh key already uploaded to Heztner
-  - in `cloud_provider_config`> `ssh_key` you must have the path to a private ssh key matching one of the public keys provided as authorised ssh keys
+  - One of:
+    - `cloud_provider_config`> `provider_settings` > `ssh_keys` you must have the id of at least 1 ssh key already uploaded to Heztner
+    - `cloud_provider_config`> `provider_settings` > `github_ids` one or more valid github id. The public keys associated to the id will be uplaoded to the servers.
 
 ## TODO
 

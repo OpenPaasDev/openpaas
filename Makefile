@@ -16,10 +16,6 @@ coverage:
 sync:
 	go run main.go sync --config.file=config.yaml
 
-.PHONY: bootstrap
-bootstrap:
-	go run main.go bootstrap
-
 .PHONY: destroy
 destroy:
 	cd config/terraform && \
