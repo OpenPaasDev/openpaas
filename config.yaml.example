@@ -18,34 +18,24 @@ server_groups:
     instance_type: cx21
 
 providers:
-  - name: k3s
-    config:
-      cluster_name: k8s
-      server_group: server
-      agent_groups: 
-      - agent
-      internal_network_interface_name: ens10 
-  - name: ansible
-    config:
-      groups:
-      - name: bootstrap
-        lifecycle: bootstrap 
-        folder: bootstrap_playbooks
-      - name: sync
-        lifecycle: always 
-        folder: playbooks
+  ansible:
+    sudo_user: root
+    ssh_key_path: /home/wfaler/.ssh/id_rsa
+    playbooks:
+    - file: playbooks/k3s.yml
+      vars:
+        network_interface: ens10
+    global_vars:
+      network_interface: ens10
 
 cloud_provider_config:
-  sudo_user: devops
-  ssh_key_github_ids: # retrieves public ssh keys under https://github.com/wfaler.keys The keys will also be added to the provider, if possible
-      - wfaler
-  private_ssh_key: /home/wfaler/.ssh/id_rsa
   provider: hetzner
+  ssh_key_github_ids: # retrieves public ssh keys under https://github.com/wfaler.keys The keys will also be added to the provider, if possible
+    - wfaler
   allowed_ips:
-    - 178.194.90.93/32
-    - 10.42.0.0/16
-    - 10.43.0.0/16
+    - 178.197.214.192/32
   provider_settings:
+    # parameterise OS family?
     location: fsn1
     ssh_keys: # (optional) use Hetzner hcloud CLI tool to retrieve key ids. Don't use fingerprints "hcloud ssh-key list"
     - 1234567

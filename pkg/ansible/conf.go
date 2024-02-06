@@ -13,7 +13,8 @@ import (
 )
 
 type Inventory struct {
-	All All `yaml:"all"`
+	Path string `yaml:"-"`
+	All  All    `yaml:"all"`
 }
 
 type InventoryJson struct {
@@ -128,6 +129,7 @@ func LoadInventory(file string) (*Inventory, error) {
 	if err != nil {
 		return nil, err
 	}
+	config.Path = file
 	return &config, nil
 }
 

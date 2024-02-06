@@ -7,19 +7,29 @@ import (
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
 )
 
-func RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error {
-	providers := map[string]Service{
-		"ansible": &Ansible{},
-		"k3s":     &K3S{},
+type Runner interface {
+	RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error
+}
+type defaultRunner struct {
+	providers map[string]Service
+}
+
+func DefaultRunner() Runner {
+	return &defaultRunner{
+		providers: map[string]Service{
+			"ansible": &Ansible{makeClient: ansible.NewClient},
+		},
 	}
-	for _, provider := range cnf.Providers {
-		if service, found := providers[provider.Name]; found {
-			err := service.Run(ctx, cnf, inventory)
+}
+
+func (runner *defaultRunner) RunAll(ctx context.Context, cnf *conf.Config, inventory *ansible.Inventory) error {
+	for k, providerConfig := range cnf.Providers {
+		if _, ok := runner.providers[k]; ok {
+			err := runner.providers[k].Run(ctx, providerConfig, inventory)
 			if err != nil {
 				return err
 			}
 		}
-
 	}
 	return nil
 }

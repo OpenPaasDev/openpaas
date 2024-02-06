@@ -44,16 +44,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
-	ssh "github.com/helloyi/go-sshclient"
 	"github.com/spf13/cobra"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
 	"github.com/OpenPaasDev/openpaas/pkg/conf"
 	"github.com/OpenPaasDev/openpaas/pkg/platform"
 	"github.com/OpenPaasDev/openpaas/pkg/provider"
-	"github.com/OpenPaasDev/openpaas/pkg/state"
 	"github.com/OpenPaasDev/openpaas/pkg/terraform"
 )
 
@@ -87,7 +84,7 @@ Currently, it defaults to Hetzner, but it can easily be expanded to target other
 		},
 	}
 
-	rootCmd.AddCommand(bootstrap(), syncCmd(), updateServers())
+	rootCmd.AddCommand(syncCmd())
 	err = rootCmd.Execute()
 	if err != nil {
 		fmt.Println(err)
@@ -101,85 +98,19 @@ func syncCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Sync your platform",
-		Long: `Syncs any changes in your platform configuration with the deployment.
-
-This command won't trigger updates in the deployed servers.'`,
+		Long:  `Syncs any changes in your platform configuration with the deployment.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
 			if err != nil {
 				panic(err)
 			}
-			d := state.Init(cnf.BaseDir)
+			runner := provider.DefaultRunner()
+			err = runner.RunAll(ctx, cnf, inv)
 
-			err = d.Sync(cnf, inv)
 			if err != nil {
 				panic(err)
 			}
-			err = provider.RunAll(ctx, cnf, inv)
-			if err != nil {
-				panic(err)
-			}
-		},
-	}
-
-	addFlags(cmd, &configFile, &terraformVersion)
-
-	return cmd
-}
-
-// TODO this is now equivalent to sync, maybe simplify into 1 method?
-func bootstrap() *cobra.Command {
-	var configFile string
-	var terraformVersion string
-	cmd := &cobra.Command{
-		Use:   "bootstrap",
-		Short: "Bootstraps your platform",
-		Long: `Bootstraps your platform, applying the configuration to your deployment.
-
-This command will run an upgrade command on your servers, to ensure they have the 
-latest version of the installed packages.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
-			if err != nil {
-				panic(err)
-			}
-			d := state.Init(cnf.BaseDir)
-
-			err = d.Sync(cnf, inv)
-			if err != nil {
-				panic(err)
-			}
-
-			err = provider.RunAll(ctx, cnf, inv)
-			if err != nil {
-				panic(err)
-			}
-		},
-	}
-
-	addFlags(cmd, &configFile, &terraformVersion)
-
-	return cmd
-}
-
-func updateServers() *cobra.Command {
-	var configFile string
-	var terraformVersion string
-	cmd := &cobra.Command{
-		Use:   "updateNodes",
-		Short: "Updates the packages installed in your servers",
-		Long: `Connects to your servers via ssh and runs an upgrade command.
-
-This is useful to apply security patches to your platform.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
-			if err != nil {
-				panic(err)
-			}
-			updateNodes(cnf, inv)
 		},
 	}
 
@@ -266,34 +197,4 @@ func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion strin
 		return nil, err
 	}
 	return inventory, nil
-}
-
-func updateNodes(cnf *conf.Config, inventory *ansible.Inventory) {
-	serverIps := []string{}
-	for k := range inventory.All.Children {
-		for _, v := range inventory.All.Children[k].Hosts {
-			serverIps = append(serverIps, v.PublicIP)
-		}
-	}
-
-	var wg sync.WaitGroup
-	for _, ip := range serverIps {
-		wg.Add(1)
-		fmt.Println(fmt.Sprintf("%s:22", ip))
-		go func(ip string) {
-			client, err := ssh.DialWithKey(fmt.Sprintf("%s:22", ip), cnf.CloudProviderConfig.User, cnf.CloudProviderConfig.SSHKey)
-			defer client.Close() //nolint
-			if err != nil {
-				panic(err)
-			}
-			script := client.Cmd("sudo apt-get update").Cmd("sudo apt-get upgrade -y")
-			script.SetStdio(os.Stdout, os.Stderr)
-			err = script.Run()
-			if err != nil {
-				fmt.Println(err)
-			}
-			wg.Done()
-		}(ip)
-	}
-	wg.Wait()
 }

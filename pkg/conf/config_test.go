@@ -17,10 +17,8 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, "config", conf.BaseDir)
 	assert.Equal(t, "hetzner", conf.DC)
-	assert.Equal(t, "root", conf.CloudProviderConfig.User)
-	assert.Equal(t, []string{"wfaler"}, conf.CloudProviderConfig.GithubIds)
-	assert.Equal(t, "/home/wfaler/.ssh/id_rsa", conf.CloudProviderConfig.SSHKey)
 	assert.Equal(t, "hetzner", conf.CloudProviderConfig.Provider)
+	assert.Equal(t, []string{"wfaler"}, conf.CloudProviderConfig.GithubIds)
 
 	assert.Len(t, conf.ServerGroups, 2)
 	assert.Equal(t, "cpx31", conf.ServerGroups["clients"].InstanceType)
@@ -38,7 +36,7 @@ func TestLoadProviders(t *testing.T) {
 	assert.NotNil(t, conf)
 	fmt.Println(conf)
 
-	assert.Len(t, conf.Providers, 2)
+	assert.Len(t, conf.Providers, 1)
 }
 
 func TestLoadTFExecVars(t *testing.T) {

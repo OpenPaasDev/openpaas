@@ -1,7 +1,6 @@
 # OpenPaas Core
 Ties together Terraform, Ansible and Runtime execution of commands (local) to create a generic base for automation with these tools.
 
-A generalisation of the original OpenPaas code, to be incorporated there later.
 
 ## Requirements
 
@@ -21,7 +20,6 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 
 ## TODO
 
-
 - [ ] add documentation to parts of the code (I need to work more with it)
 - [ ] enable remote backend for TF for coordination, based on some flag
 
@@ -30,11 +28,6 @@ A generalisation of the original OpenPaas code, to be incorporated there later.
 - [ ] using systemctl, setup nginx, upload/download binary, upload service, restart service
 
 - [ ] hetzner minimum viable config (2 boxes, 1 load balancer, 1 postgres, private network)
- 
-
-- [ ] Terraform variables from environment
-- [ ] Generate "diff" inventory: take old TF output and new TF output, and generate a diff inventory
-- [ ] merge with bootstrap ansible branch (when merged to master)
 
 - [ ] set up postgres and backups? single ndoe with continues backup + daily snapshot?
 - [ ] postgres to master/slave

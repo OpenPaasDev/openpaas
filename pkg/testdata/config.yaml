@@ -18,29 +18,24 @@ server_groups:
     num: 2
     instance_type: cpx31
 providers:
-  - name: k3s
-    config:
-      cluster_name: k8s
-      server_group: server
-      agent_groups: 
-      - agent
-      internal_network_interface_name: ens10 
-  - name: ansible
-    config:
-      groups:
-      - name: bootstrap
-        lifecycle: on-start
-        folder: bootstrap_playbooks
-      - name: sync
-        lifecycle: always
-        folder: playbooks
+  ansible:
+    sudo_user: root
+    playbooks:
+    - file: playbooks/k3s.yml
+      vars:
+        network_interface: ens10
+        bar: foo
+        foo: baz
+        env_var: FOO
+        ambiguous_var: BAR
+    - file: playbooks/postgres.yml
+    global_vars:
+      network_interface: ens10
+      foo: bar
 
 cloud_provider_config:
-  internal_network_interface_name: ens10
-  sudo_user: root
   ssh_key_github_ids:
     - wfaler
-  private_ssh_key: /home/wfaler/.ssh/id_rsa
   allowed_ips:
     - 85.4.84.201/32
   provider: hetzner
