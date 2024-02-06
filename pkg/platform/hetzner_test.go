@@ -1,146 +1,62 @@
 package platform
 
 import (
-	"path/filepath"
+	"errors"
 	"testing"
 
-	"github.com/OpenPaasDev/openpaas/pkg/conf"
+	"github.com/jarcoal/httpmock"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 )
 
-func TestHetzner_Cleanup_NotImplemented(t *testing.T) {
+func TestFetchGitHubKeys(t *testing.T) {
 	ctx := context.Background()
-	conf, err := conf.Load(filepath.Join("..", "testdata", "config.yaml"))
+	// Activate httpmock
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// Mock response
+	payload := `ssh-rsa AAAAB3Nza... user@example.com
+
+ssh-rsa BBBBA3Nza... user@main.com
+`
+
+	httpmock.RegisterResponder("GET", "https://github.com/wfaler.keys",
+		httpmock.NewStringResponder(200, payload))
+
+	keys, err := fetchGitHubKeys(ctx, "wfaler")
 	require.NoError(t, err)
-	assert.NotNil(t, conf)
-	hetzner := Hetzner{}
-
-	err = hetzner.Cleanup(ctx, conf)
-	require.NoError(t, err)
+	assert.Len(t, keys, 2)
+	assert.Contains(t, keys[0], "ssh-rsa AAAAB3Nza")
+	assert.Contains(t, keys[1], "ssh-rsa BBBBA3Nza")
 }
 
-func TestFindChangesToMake_NoKeysInHetzner(t *testing.T) {
-	var keysInHetzner []HetznerSSHKey
-	var githubKeys []conf.GithubKey
+func TestFetchGitHubKeys_NotFound(t *testing.T) {
+	ctx := context.Background()
+	// Activate httpmock
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
-	githubKeys = []conf.GithubKey{
-		{PublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH0p7vluS7ldSFDBYx9ZXVQcsJdWIoSTVvqhcakKDQ34 user@example.com", Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22"},
-		{PublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", Fingerprint: "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
-	}
+	// Mock response
+	httpmock.RegisterResponder("GET", "https://github.com/wfaler.keys",
+		httpmock.NewStringResponder(404, "Not Found"))
 
-	erase, upload := findChangesToMake(keysInHetzner, githubKeys)
-	assert.Equal(t, []string(nil), erase)
-	assert.Equal(t, githubKeys, upload)
+	_, err := fetchGitHubKeys(ctx, "wfaler")
+	require.Error(t, err)
 }
 
-func TestFindChangesToMake_NoKeysInGithub_HetznerHasNonGHKeys(t *testing.T) {
-	var keysInHetzner []HetznerSSHKey
-	var githubKeys []conf.GithubKey
+func TestFetchGitHubKeys_Error(t *testing.T) {
+	ctx := context.Background()
+	// Activate httpmock
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
-	keysInHetzner = []HetznerSSHKey{
-		{
-			ID:          0,
-			Name:        "key1",
-			Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-	}
+	// Mock response
+	httpmock.RegisterResponder("GET", "https://github.com/wfaler.keys",
+		httpmock.NewErrorResponder(errors.New("internal server error")))
 
-	erase, upload := findChangesToMake(keysInHetzner, githubKeys)
-	assert.Equal(t, []string(nil), erase)
-	assert.Equal(t, githubKeys, upload)
-}
-
-func TestFindChangesToMake_NoKeysInGithub_HetznerHasGHKey(t *testing.T) {
-	var keysInHetzner []HetznerSSHKey
-	var githubKeys []conf.GithubKey
-
-	keysInHetzner = []HetznerSSHKey{
-		{
-			ID:          0,
-			Name:        KeyPrefix + "key1",
-			Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-	}
-
-	erase, upload := findChangesToMake(keysInHetzner, githubKeys)
-	assert.Equal(t, []string{"0"}, erase)
-	assert.Equal(t, githubKeys, upload)
-}
-
-func TestFindChangesToMake_NoKeysFromGHInHetzner(t *testing.T) {
-	var keysInHetzner []HetznerSSHKey
-	var githubKeys []conf.GithubKey
-
-	keysInHetzner = []HetznerSSHKey{
-		{
-			ID:          0,
-			Name:        "key1",
-			Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-	}
-
-	githubKeys = []conf.GithubKey{
-		{PublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", Fingerprint: "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
-	}
-
-	erase, upload := findChangesToMake(keysInHetzner, githubKeys)
-	assert.Equal(t, []string(nil), erase)
-	assert.Equal(t, githubKeys, upload)
-}
-
-func TestFindChangesToMake_NoCommonKeys(t *testing.T) {
-	var keysInHetzner []HetznerSSHKey
-	var githubKeys []conf.GithubKey
-
-	keysInHetzner = []HetznerSSHKey{
-		{
-			ID:          0,
-			Name:        KeyPrefix + "key1",
-			Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-	}
-
-	githubKeys = []conf.GithubKey{
-		{PublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", Fingerprint: "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
-	}
-
-	erase, upload := findChangesToMake(keysInHetzner, githubKeys)
-	assert.Equal(t, []string{"0"}, erase)
-	assert.Equal(t, githubKeys, upload)
-}
-
-func TestFindChangesToMake_FindCommonKeys(t *testing.T) {
-	var keysInHetzner []HetznerSSHKey
-	var githubKeys []conf.GithubKey
-
-	keysInHetzner = []HetznerSSHKey{
-		{
-			ID:          0,
-			Name:        KeyPrefix + "key1",
-			Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-		{
-			ID:          1,
-			Name:        KeyPrefix + "key_to_erase",
-			Fingerprint: "bb:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-		{
-			ID:          0,
-			Name:        "key_non_gh",
-			Fingerprint: "cc:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22",
-		},
-	}
-
-	githubKeys = []conf.GithubKey{
-		{PublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH0p7vluS7ldSFDBYx9ZXVQcsJdWIoSTVvqhcakKDQ34 user@example.com", Fingerprint: "ae:dc:ab:c1:b1:b0:21:2b:8a:06:77:ae:9c:9b:4b:22"},
-		{PublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", Fingerprint: "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
-	}
-
-	erase, upload := findChangesToMake(keysInHetzner, githubKeys)
-	assert.Equal(t, []string{"1"}, erase)
-	assert.Equal(t, []conf.GithubKey{
-		{PublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCas+tCHuRci1xIHwkBFvrq/dDm0l3PSBiD+Pm7SOqq23Qg+ZUANcVNSgot0W/NmEHy/9rA78Ps+jHwrwPrliw6TNLYC82LueJHPo1dGioprmKVKn9efYVuFDUubRPr+/CAZXARUOSqMon7xiaxAy51qhIpWrLxcs2HP/G3IW8kVxuwdztyT7D+tz5tfCvH98PlXf6MjWudL8bbTAWU7OEpUVia2pcUlAOXkkOi0ANrx4Ieovmhw7G8/AC0Rn+g3hSf1A45RsODVFq9BezunWbjcNicwV2++/CFpE5fuXT6pRgrBfXgI3P4BVRMxaG4CXLl6uUPrg/8oYoz/uJtxzEwv767YeNICi9RfXjIg0hQLoZfIAZCxYIVZw9A91ZIG8+IP276gG1kHfyMfs2W95dK6Uy/fdF6G3p3PLFUtjSK6dZwQeO4IzltrxujQ26kgMFDYMmD7lDDI3JzLqXy969MpMd60iamXDpgxQ3okZpa7sd5TgtEH+aA8ia58bhSOwE= user@main.com", Fingerprint: "a6:1e:2b:44:9c:84:e2:1c:84:9c:6d:2d:ed:72:ad:16"},
-	}, upload)
+	_, err := fetchGitHubKeys(ctx, "wfaler")
+	require.Error(t, err)
 }

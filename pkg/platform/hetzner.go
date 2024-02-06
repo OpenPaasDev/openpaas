@@ -2,7 +2,11 @@ package platform
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -11,66 +15,80 @@ import (
 	"golang.org/x/net/context"
 )
 
+const GHKeyPrefix string = "gh-key-"
+
 type Hetzner struct{}
 
-func (s *Hetzner) Cleanup(context.Context, *conf.Config) error { return nil }
+func (s *Hetzner) Cleanup(context.Context, *conf.Config) error {
+	fmt.Println("Cleanup for Hetzner platform")
+	return nil
+}
 
-func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) (*conf.Config, error) {
+func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
+	fmt.Println("Preparing Hetzner platform")
 	keysInHetzner, err := fetchHetznerKeys()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	keysToErase, keysToUpload := findChangesToMake(keysInHetzner, conf.CloudProviderConfig.GithubKeys)
 
-	// erase unnecessary keys
-	for _, keyId := range keysToErase {
-		err := eraseKeyFromHetzner(keyId)
-		if err != nil {
-			fmt.Println("Error erasing key", keyId, "from Hetzner:", err)
-			return nil, err
+	// load keys from github
+	var githubPublicKeys []string
+	for _, user := range conf.CloudProviderConfig.GithubIds {
+		keys, er := fetchGitHubKeys(ctx, user)
+		if er != nil {
+			return er
+		}
+		githubPublicKeys = append(githubPublicKeys, keys...)
+	}
+
+	// delete keys that start with the github prefix, as they could be outdated from a previous upload
+	for _, key := range keysInHetzner {
+		if strings.HasPrefix(key.Name, GHKeyPrefix) {
+			er := eraseKeyFromHetzner(key)
+			if er != nil {
+				fmt.Println("Error erasing key", key.ID, "with name", key.Name, "from Hetzner:", er)
+				return er
+			}
 		}
 	}
 
-	// upload keys
-	for _, key := range keysToUpload {
+	// upload all github keys to hetzner
+	for _, publicKey := range githubPublicKeys {
 		// hetzner requires a name for a key. We don't have a name associated, so we take the last 10 chars of the key as the name
-		parts := strings.SplitN(key.PublicKey, " ", 2)
+		parts := strings.SplitN(publicKey, " ", 2)
 		name := parts[1]
 		nLen := len(name)
 		if nLen > 10 {
-			name = KeyPrefix + name[nLen-10:]
+			name = GHKeyPrefix + name[nLen-10:]
 		}
-
-		err := uploadKeyToHetzner(key, name)
-		if err != nil {
-			fmt.Println("Error uploading key", key, "to Hetzner:", err)
-			return nil, err
-		}
-	}
-
-	return nil, nil
-}
-
-const KeyPrefix string = "gh-key-"
-
-func findChangesToMake(keysInHetzner []HetznerSSHKey, githubKeys []conf.GithubKey) ([]string, []conf.GithubKey) {
-	// find any keys in github not in hetzner
-	var keysToUpload []conf.GithubKey
-	for _, ghKey := range githubKeys {
-		if !isInHetzner(keysInHetzner, ghKey.Fingerprint) {
-			keysToUpload = append(keysToUpload, ghKey)
+		er := uploadKeyToHetzner(publicKey, name)
+		if er != nil {
+			fmt.Println("Error uploading key ending in", name, "to Hetzner:", er)
+			return er
 		}
 	}
 
-	// find keys in hetzner that were uploaded as gh-keys and are not in github anymore
-	var keysToErase []string
-	for _, k := range keysInHetzner {
-		if !isInGithub(githubKeys, k.Fingerprint) && strings.HasPrefix(k.Name, KeyPrefix) {
-			keysToErase = append(keysToErase, strconv.Itoa(int(k.ID)))
+	// read the keys again to extract the ids assigned to the new keys
+	updatedKeysInHetzner, err := fetchHetznerKeys()
+	if err != nil {
+		return err
+	}
+	var githubIds []string
+	for _, key := range updatedKeysInHetzner {
+		if strings.HasPrefix(key.Name, GHKeyPrefix) {
+			githubIds = append(githubIds, strconv.Itoa(int(key.ID)))
 		}
 	}
 
-	return keysToErase, keysToUpload
+	// the yaml loaded entry is a []interface{} not []string{} so we need to convert it, if present
+	var keyIdsFromConfig []string
+	if sshKeys, ok := conf.CloudProviderConfig.ProviderSettings["ssh_keys"]; ok {
+		keyIdsFromConfig = interfaceToSlice(sshKeys.([]interface{}))
+	}
+
+	// update the config adding the github key ids to any existing config in place
+	conf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append(keyIdsFromConfig, githubIds...)
+	return nil
 }
 
 type HetznerSSHKey struct {
@@ -95,34 +113,66 @@ func fetchHetznerKeys() ([]HetznerSSHKey, error) {
 	return keys, nil
 }
 
-func eraseKeyFromHetzner(keyId string) error {
-	fmt.Println("Erasing from Hetzner key", keyId)
+func eraseKeyFromHetzner(key HetznerSSHKey) error {
+	fmt.Println("Erasing from Hetzner key", key.ID, "with name", key.Name)
 	// #nosec G204 we know the input we are sending to this command
-	_, err := exec.Command("hcloud", "ssh-key", "delete", keyId).Output()
+	_, err := exec.Command("hcloud", "ssh-key", "delete", strconv.Itoa(int(key.ID))).Output()
 	return err
 }
 
-func uploadKeyToHetzner(key conf.GithubKey, name string) error {
-	fmt.Println("Uploading to Hetzner key", name, "with fingerprint", key.Fingerprint)
+func uploadKeyToHetzner(publicKey string, name string) error {
+	fmt.Println("Uploading to Hetzner public key ending in", name)
 	// #nosec G204 we know the input we are sending to this command
-	_, err := exec.Command("hcloud", "ssh-key", "create", "--name", name, "--public-key", key.PublicKey).Output()
+	_, err := exec.Command("hcloud", "ssh-key", "create", "--name", name, "--public-key", publicKey).Output()
 	return err
 }
 
-func isInGithub(list []conf.GithubKey, fingerprint string) bool {
-	for _, v := range list {
-		if v.Fingerprint == fingerprint {
-			return true
+func fetchGitHubKeys(ctx context.Context, githubUser string) ([]string, error) {
+	const baseURL = "https://github.com"
+	fullURL := fmt.Sprintf("%s/%s.keys", baseURL, url.PathEscape(githubUser))
+	// #nosec G107 we are loading a dynamic url in purpose
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// we need to close the body to avoid issues, but linter complains if we ignore the error case
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v\n", err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf("received non-200 status code: %d", resp.StatusCode))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := strings.Split(string(body), "\n")
+	// Filter out empty strings
+	var nonEmptyKeys []string
+	for _, part := range keys {
+		if part != "" {
+			nonEmptyKeys = append(nonEmptyKeys, part)
 		}
 	}
-	return false
+	return nonEmptyKeys, nil
 }
 
-func isInHetzner(list []HetznerSSHKey, fingerprint string) bool {
-	for _, v := range list {
-		if v.Fingerprint == fingerprint {
-			return true
+func interfaceToSlice(in []interface{}) []string {
+	var slice []string
+	for _, key := range in {
+		castKey, ok := key.(int)
+		if ok {
+			slice = append(slice, strconv.Itoa(castKey))
 		}
 	}
-	return false
+	return slice
 }

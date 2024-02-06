@@ -53,7 +53,6 @@ type CloudProvider struct {
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`
 	SSHKey           string                 `yaml:"private_ssh_key"`
-	GithubKeys       []GithubKey            `yaml:"-"` // Ignore in yaml, added to propagate information during config changes
 }
 
 func Load(file string) (*Config, error) {

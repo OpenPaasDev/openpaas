@@ -126,13 +126,6 @@ resource "hcloud_firewall_attachment" "fw_ref" {
     ])
 }
 
-# Define hcloud_ssh_key resources
-data "hcloud_ssh_key" "ssh_keys_provided" {
-  for_each = toset(var.ssh_keys)
-
-  fingerprint = each.value
-}
-
 resource "hcloud_server" "server_node" {
   for_each           = { for entry in local.servers : "${entry.name}" => entry }
   name               = each.value.name
@@ -153,7 +146,7 @@ resource "hcloud_server" "server_node" {
     "group" = each.value.group_name
   }
 
-  ssh_keys = [for key in data.hcloud_ssh_key.ssh_keys_provided : key.id]
+  ssh_keys = [for id in var.ssh_keys : id]
   user_data  = file("cloud-init.yml")
 
   # don't destroy existing machines if some data changes

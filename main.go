@@ -194,7 +194,7 @@ func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
 }
 
 func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
-	cnf, err := loadConfig(ctx, file)
+	cnf, err := loadConfig(file)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,15 +217,8 @@ func initStack(ctx context.Context, file string, terraformVersion string) (*conf
 	return cnf, inventory, nil
 }
 
-// loads the config file (yaml) and does any prep work needed before we use that config with Terraform and Ansible
-// for example, it takes care of setting the right ssh keys for the servers
-func loadConfig(ctx context.Context, file string) (*conf.Config, error) {
+func loadConfig(file string) (*conf.Config, error) {
 	cnf, err := conf.Load(file)
-	if err != nil {
-		return nil, err
-	}
-	//-- teh code is passing the ssh id not fingerprint to ssh_keys?? can we remove ssh_import_id from cloud=-init
-	cnf, err = conf.UpdateConfigWithGithubKeys(ctx, cnf)
 	if err != nil {
 		return nil, err
 	}

@@ -1,9 +1,10 @@
 #cloud-config
 users:
   - name: "{{.CloudProviderConfig.User}}"
-    groups: users, admin
+    groups: users, admin, sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
+
 package_update: true
 package_upgrade: true
 # default packages we want to enable always, for security, like fail2ban
@@ -20,7 +21,7 @@ runcmd:
   - ufw allow 'OpenSSH'
   - ufw enable
   #  secure ssh
-  - sed -ie '/^#PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+#  - sed -ie '/^#PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
   - sed -ie '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
   - sed -ie '/^#PermitEmptyPasswords/s/^.*$/PermitEmptyPasswords no/' /etc/ssh/sshd_config
   - sed -ie '/^X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
