@@ -20,13 +20,33 @@ const GHKeyPrefix string = "gh-key-"
 type Hetzner struct{}
 
 func (s *Hetzner) Cleanup(context.Context, *conf.Config) error {
-	fmt.Println("Cleanup for Hetzner platform")
+	fmt.Println("Cleanup for Hetzner platform...")
 	return nil
 }
 
 func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
-	fmt.Println("Preparing Hetzner platform")
-	keysInHetzner, err := fetchHetznerKeys()
+	fmt.Println("Preparing Hetzner platform...")
+	err := runPreparationLogic(ctx, conf, fetchHetznerKeys, fetchGitHubKeys, eraseKeyFromHetzner, uploadKeyToHetzner)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type HetznerSSHKey struct {
+	ID          uint32 `json:"id"`
+	Name        string `json:"name"`
+	Fingerprint string `json:"fingerprint"`
+}
+
+func runPreparationLogic(ctx context.Context,
+	conf *conf.Config,
+	getHetznerKeys func() ([]HetznerSSHKey, error),
+	getGithubKeys func(context.Context, string) ([]string, error),
+	eraseHetznerKey func(HetznerSSHKey) error,
+	uploadHetznerKey func(string, string) error,
+) error {
+	keysInHetzner, err := getHetznerKeys()
 	if err != nil {
 		return err
 	}
@@ -34,7 +54,7 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
 	// load keys from github
 	var githubPublicKeys []string
 	for _, user := range conf.CloudProviderConfig.GithubIds {
-		keys, er := fetchGitHubKeys(ctx, user)
+		keys, er := getGithubKeys(ctx, user)
 		if er != nil {
 			return er
 		}
@@ -44,7 +64,7 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
 	// delete keys that start with the github prefix, as they could be outdated from a previous upload
 	for _, key := range keysInHetzner {
 		if strings.HasPrefix(key.Name, GHKeyPrefix) {
-			er := eraseKeyFromHetzner(key)
+			er := eraseHetznerKey(key)
 			if er != nil {
 				fmt.Println("Error erasing key", key.ID, "with name", key.Name, "from Hetzner:", er)
 				return er
@@ -61,7 +81,7 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
 		if nLen > 10 {
 			name = GHKeyPrefix + name[nLen-10:]
 		}
-		er := uploadKeyToHetzner(publicKey, name)
+		er := uploadHetznerKey(publicKey, name)
 		if er != nil {
 			fmt.Println("Error uploading key ending in", name, "to Hetzner:", er)
 			return er
@@ -69,7 +89,7 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
 	}
 
 	// read the keys again to extract the ids assigned to the new keys
-	updatedKeysInHetzner, err := fetchHetznerKeys()
+	updatedKeysInHetzner, err := getHetznerKeys()
 	if err != nil {
 		return err
 	}
@@ -89,12 +109,6 @@ func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
 	// update the config adding the github key ids to any existing config in place
 	conf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append(keyIdsFromConfig, githubIds...)
 	return nil
-}
-
-type HetznerSSHKey struct {
-	ID          uint32 `json:"id"`
-	Name        string `json:"name"`
-	Fingerprint string `json:"fingerprint"`
 }
 
 func fetchHetznerKeys() ([]HetznerSSHKey, error) {
