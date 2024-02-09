@@ -22,7 +22,6 @@ variable "server_groups" {
   ]
 }
 
-
 variable "ssh_keys" {
   type = list
   default = [{{ range $key, $value := .CloudProviderConfig.ProviderSettings.ssh_keys}}
@@ -53,13 +52,6 @@ variable "network_name" {
 variable "allow_ips" {
   type = list
   default = [{{ range $key, $value := .CloudProviderConfig.AllowedIPs}}
-   "{{ $value }}",{{ end }}
-  ]
-}
-
-variable "https_allowed_ips" {
-  type = list
-  default = [{{ range $key, $value := .CloudProviderConfig.ProviderSettings.https_allowed_ips}}
    "{{ $value }}",{{ end }}
   ]
 }

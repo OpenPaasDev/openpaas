@@ -29,7 +29,11 @@ override.tf.json
 # example: *tfplan*
 .gitsecret/keys/random_seed
 !*.secret
-secrets/secrets.ymlsecrets/consul/consul-agent-ca-key.pemsecrets/consul/consul-agent-ca.pemsecrets/consul/dc1-server-consul-0-key.pemsecrets/consul/dc1-server-consul-0.pem
+secrets/secrets.yml
+secrets/consul/consul-agent-ca-key.pem
+secrets/consul/consul-agent-ca.pem
+secrets/consul/dc1-server-consul-0-key.pem
+secrets/consul/dc1-server-consul-0.pem
 secrets/*.yml
 secrets/**/*.pem
 secrets/**/*.csr
@@ -49,3 +53,7 @@ coverage.out
 certs/
 profile.cov
 **/.idea/*
+
+# exclude config
+config.yaml
+playbooks

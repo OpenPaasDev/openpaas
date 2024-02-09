@@ -145,7 +145,14 @@ resource "hcloud_server" "server_node" {
     "group" = each.value.group_name
   }
 
-  ssh_keys = var.ssh_keys
+  ssh_keys = [for id in var.ssh_keys : id]
+
+  # don't destroy existing machines if some data changes
+  lifecycle {
+    ignore_changes = [
+      ssh_keys, user_data
+    ]
+  }
 }
 
 resource "hcloud_server_network" "network_binding" {

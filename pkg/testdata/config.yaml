@@ -20,9 +20,9 @@ server_groups:
 providers:
   ansible:
     sudo_user: root
-    playbooks: 
+    playbooks:
     - file: playbooks/k3s.yml
-      vars: 
+      vars:
         network_interface: ens10
         bar: foo
         foo: baz
@@ -34,13 +34,13 @@ providers:
       foo: bar
 
 cloud_provider_config:
+  github_ids:
+    - wfaler
   allowed_ips:
     - 85.4.84.201/32
   provider: hetzner
   provider_settings:
     location: nbg1
-    ssh_keys:
-    - wille.faler@gmail.com
     load_balancer_type: lb11 # lb11 or lb21
     resource_names:
       base_server_name: nomad-srv

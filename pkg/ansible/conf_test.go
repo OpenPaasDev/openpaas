@@ -38,7 +38,7 @@ func TestGenerateInventory(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(t, filepath.Join(folder, "inventory"))
-
+	assert.Equal(t, filepath.Join(folder, "inventory"), inventory.Path)
 	assert.NotEmpty(t, inventory.GetAllPrivateHosts())
 
 	_, err = LoadInventory(filepath.Join(folder, "inventory"))

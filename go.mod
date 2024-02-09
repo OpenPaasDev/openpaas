@@ -7,9 +7,11 @@ require (
 	github.com/hashicorp/hc-install v0.6.2
 	github.com/hashicorp/hcl2 v0.0.0-20191002203319-fb75b3253c80
 	github.com/hashicorp/terraform-exec v0.20.0
+	github.com/jarcoal/httpmock v1.3.1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.2
+	golang.org/x/net v0.18.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

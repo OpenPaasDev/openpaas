@@ -13,20 +13,25 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
-func InitTf(ctx context.Context, workingDir string, stdOut, stdErr io.Writer) (*tfexec.Terraform, error) {
+func InitTf(ctx context.Context, workingDir string, terraformVersion string, stdOut, stdErr io.Writer) (*tfexec.Terraform, error) {
 
 	i := install.NewInstaller()
 
-	version := version.Must(version.NewVersion("1.4.2"))
+	// Set terraformVersion version if not provided
+	if terraformVersion == "" {
+		terraformVersion = "1.7.3"
+	}
+
+	selectedVersion := version.Must(version.NewVersion(terraformVersion))
 
 	execPath, err := i.Ensure(ctx, []src.Source{
 		&fs.ExactVersion{
 			Product: product.Terraform,
-			Version: version,
+			Version: selectedVersion,
 		},
 		&releases.ExactVersion{
 			Product: product.Terraform,
-			Version: version,
+			Version: selectedVersion,
 		},
 	})
 	if err != nil {

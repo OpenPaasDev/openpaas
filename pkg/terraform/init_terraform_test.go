@@ -11,7 +11,7 @@ import (
 
 func Test_Init_Terraform(t *testing.T) {
 	ctx := context.Background()
-	tf, err := InitTf(ctx, ".", os.Stdin, os.Stderr)
+	tf, err := InitTf(ctx, ".", "1.4.3", os.Stdin, os.Stderr)
 	require.NoError(t, err)
 	v, _, err := tf.Version(ctx, false)
 	require.NoError(t, err)

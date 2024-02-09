@@ -20,23 +20,22 @@ server_groups:
 providers:
   ansible:
     sudo_user: root
-    ssh_key_path: /home/wfaler/.ssh/id_rsa
-    playbooks: 
+    playbooks:
     - file: playbooks/k3s.yml
-      vars: 
+      vars:
         network_interface: ens10
     global_vars:
       network_interface: ens10
 
 cloud_provider_config:
   provider: hetzner
+  github_ids: # retrieves public ssh keys under https://github.com/<id>.keys The keys will also be added to the provider, if possible
+    - wfaler
   allowed_ips:
     - 178.197.214.192/32
   provider_settings:
     # parameterise OS family?
     location: fsn1
-    ssh_keys:
-    - wfaler@chaordic.io
     load_balancer_type: lb11
     ssl_certificate_ids:
     - 1232582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"

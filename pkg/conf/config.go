@@ -42,6 +42,7 @@ type ClientVolume struct {
 }
 
 type CloudProvider struct {
+	GithubIds        []string               `yaml:"github_ids"`
 	Provider         string                 `yaml:"provider"`
 	ProviderSettings map[string]interface{} `yaml:"provider_settings"`
 	AllowedIPs       []string               `yaml:"allowed_ips"`
@@ -55,7 +56,6 @@ type HetznerResourceNames struct {
 
 type HetznerSettings struct {
 	Location         string               `yaml:"location"`
-	SSHKeys          []string             `yaml:"ssh_keys"`
 	ResourceNames    HetznerResourceNames `yaml:"resource_names"`
 	LoadBalancerType string               `yaml:"load_balancer_type"`
 }
@@ -66,8 +66,6 @@ type TFVarsConfig struct {
 }
 
 func Load(file string) (*Config, error) {
-	fmt.Println(file)
-	fmt.Println(filepath.Abs(file))
 	fmt.Println("Loading config from file", file)
 	bytes, err := os.ReadFile(filepath.Clean(file))
 	if err != nil {
@@ -79,34 +77,6 @@ func Load(file string) (*Config, error) {
 		return nil, err
 	}
 	return &config, nil
-}
-
-func LoadTFVarsConfig(config Config) (*TFVarsConfig, error) {
-	var providerConfig interface{}
-	if config.CloudProviderConfig.Provider == "hetzner" {
-		var hetznerConfig HetznerSettings
-		bytes, err := yaml.Marshal(config.CloudProviderConfig.ProviderSettings)
-		if err != nil {
-			return nil, err
-		}
-
-		err = yaml.Unmarshal(bytes, &hetznerConfig)
-		if err != nil {
-			return nil, err
-		}
-		providerConfig = hetznerConfig
-	}
-
-	for _, group := range config.ServerGroups {
-		if group.Volumes == nil {
-			group.Volumes = []Volume{}
-		}
-	}
-
-	return &TFVarsConfig{
-		ServerGroups:   config.ServerGroups,
-		ProviderConfig: providerConfig,
-	}, nil
 }
 
 func LoadTFExecVars() *tfexec.VarOption {
