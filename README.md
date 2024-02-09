@@ -21,7 +21,6 @@ Ties together Terraform, Ansible and Runtime execution of commands (local) to cr
 
 - [ ] add documentation to parts of the code (I need to work more with it)
 - [ ] enable remote backend for TF for coordination, based on some flag
-- [ ] copy ansible playbook from artaml and use it as template to run nginx as binary, directly
 - [ ] using systemctl, setup nginx, upload/download binary, upload service, restart service
 - [ ] hetzner minimum viable config (2 boxes, 1 load balancer, 1 postgres, private network)
 - [ ] set up postgres and backups? single ndoe with continues backup + daily snapshot?
