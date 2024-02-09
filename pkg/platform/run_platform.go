@@ -11,7 +11,7 @@ var platforms = map[string]Platform{
 
 func RunPreparation(ctx context.Context, cnf *conf.Config) error {
 	if platform, found := platforms[cnf.DC]; found {
-		err := platform.Preparation(ctx, cnf)
+		err := platform.Prepare(ctx, cnf)
 		if err != nil {
 			return err
 		}

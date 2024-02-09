@@ -10,7 +10,7 @@ import (
 )
 
 type IP struct { //nolint
-	Query string
+	Query string `json:"query"`
 }
 
 func init() {

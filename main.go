@@ -103,6 +103,7 @@ func syncCmd() *cobra.Command {
 			ctx := context.Background()
 			cnf, inv, err := initStack(ctx, configFile, terraformVersion)
 			if err != nil {
+				fmt.Println(err)
 				panic(err)
 			}
 			runner := provider.DefaultRunner()
@@ -125,7 +126,7 @@ func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
 }
 
 func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
-	cnf, err := loadConfig(file)
+	cnf, err := conf.Load(file)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,15 +147,6 @@ func initStack(ctx context.Context, file string, terraformVersion string) (*conf
 	}
 
 	return cnf, inventory, nil
-}
-
-func loadConfig(file string) (*conf.Config, error) {
-	cnf, err := conf.Load(file)
-	if err != nil {
-		return nil, err
-	}
-
-	return cnf, nil
 }
 
 func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion string) (*ansible.Inventory, error) {
@@ -184,10 +176,12 @@ func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion strin
 			panic(e)
 		}
 	}()
+	// Terraform initialised again, this time with output to file f, to capture outputs as json
 	tf, err = terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, f, os.Stderr)
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = tf.Output(ctx)
 	if err != nil {
 		return nil, err

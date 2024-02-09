@@ -56,7 +56,6 @@ type HetznerResourceNames struct {
 
 type HetznerSettings struct {
 	Location         string               `yaml:"location"`
-	SSHKeys          []string             `yaml:"ssh_keys"`
 	ResourceNames    HetznerResourceNames `yaml:"resource_names"`
 	LoadBalancerType string               `yaml:"load_balancer_type"`
 }
@@ -67,8 +66,6 @@ type TFVarsConfig struct {
 }
 
 func Load(file string) (*Config, error) {
-	fmt.Println(file)
-	fmt.Println(filepath.Abs(file))
 	fmt.Println("Loading config from file", file)
 	bytes, err := os.ReadFile(filepath.Clean(file))
 	if err != nil {

@@ -36,8 +36,6 @@ cloud_provider_config:
   provider_settings:
     # parameterise OS family?
     location: fsn1
-    ssh_keys: # (optional) use Hetzner hcloud CLI tool to retrieve key ids. Don't use fingerprints "hcloud ssh-key list"
-    - 1234567
     load_balancer_type: lb11
     ssl_certificate_ids:
     - 1232582 # use Hetzner hcloud CLI tool to retrieve numeric ID: "hcloud certificate list"

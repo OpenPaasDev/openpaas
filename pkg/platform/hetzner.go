@@ -26,7 +26,7 @@ func (s *Hetzner) Cleanup(context.Context, *conf.Config) error {
 	return nil
 }
 
-func (s *Hetzner) Preparation(ctx context.Context, conf *conf.Config) error {
+func (s *Hetzner) Prepare(ctx context.Context, conf *conf.Config) error {
 	fmt.Println("Preparing Hetzner platform...")
 	err := runPreparationLogic(ctx, conf, fetchHetznerKeys, fetchGitHubKeys, eraseKeyFromHetzner, uploadKeyToHetzner, util.GetPublicIP)
 	if err != nil {
@@ -51,7 +51,7 @@ func runPreparationLogic(ctx context.Context,
 ) error {
 	keysInHetzner, err := getHetznerKeys()
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Error fetching keys from Hetzner: %v\n", err))
 	}
 
 	// load keys from github
@@ -103,14 +103,8 @@ func runPreparationLogic(ctx context.Context,
 		}
 	}
 
-	// the yaml loaded entry is a []interface{} not []string{} so we need to convert it, if present
-	var keyIdsFromConfig []string
-	if sshKeys, ok := conf.CloudProviderConfig.ProviderSettings["ssh_keys"]; ok {
-		keyIdsFromConfig = interfaceToSlice(sshKeys.([]interface{}))
-	}
-
 	// update the config adding the github key ids to any existing config in place
-	conf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append(keyIdsFromConfig, githubIds...)
+	conf.CloudProviderConfig.ProviderSettings["ssh_keys"] = append([]string{}, githubIds...)
 
 	// update allowed ips record with the current public ip
 	ip, err := getPublicIp(ctx)
@@ -189,15 +183,4 @@ func fetchGitHubKeys(ctx context.Context, githubUser string) ([]string, error) {
 		}
 	}
 	return nonEmptyKeys, nil
-}
-
-func interfaceToSlice(in []interface{}) []string {
-	var slice []string
-	for _, key := range in {
-		castKey, ok := key.(int)
-		if ok {
-			slice = append(slice, strconv.Itoa(castKey))
-		}
-	}
-	return slice
 }

@@ -63,8 +63,7 @@ func TestRunPreparationLogic_UpdatesConfigAndKeys(t *testing.T) {
 	assert.Equal(t, []uint32{1, 2}, erasedId)
 	assert.Equal(t, githubKeys, uploadedKeys)
 	assert.Equal(t, []string{"gh-key-xample.com", "gh-key-r@main.com"}, uploadedNames)
-	// 123456 from config, plus uploaded gh keys
-	assert.Equal(t, []string{"123456", "3", "4"}, cnf.CloudProviderConfig.ProviderSettings["ssh_keys"])
+	assert.Equal(t, []string{"3", "4"}, cnf.CloudProviderConfig.ProviderSettings["ssh_keys"])
 	assert.Equal(t, []string{"85.4.84.201/32", "1.1.1.1/32"}, cnf.CloudProviderConfig.AllowedIPs)
 }
 
@@ -73,15 +72,13 @@ func TestRunPreparationLogic_PropagatesReadKeysErrors(t *testing.T) {
 	cnf, err := conf.Load("../testdata/config.yaml")
 	require.NoError(t, err)
 
-	expected := errors.New("Fail")
-
 	githubKeys := []string{"ssh-rsa AAAAB3Nza1234567890AAAAB3Nza user@example.com", "ssh-rsa BBBBA3Nza1234567890BBBBA3Nza user@main.com"}
 	var erasedId []uint32
 	var uploadedKeys []string
 	var uploadedNames []string
 
 	getHetznerKeys := func() ([]HetznerSSHKey, error) {
-		return nil, expected
+		return nil, errors.New("Fail")
 	}
 	getGithubKeys := func(context.Context, string) ([]string, error) {
 		return githubKeys, nil
@@ -100,7 +97,7 @@ func TestRunPreparationLogic_PropagatesReadKeysErrors(t *testing.T) {
 	}
 
 	err = runPreparationLogic(ctx, cnf, getHetznerKeys, getGithubKeys, eraseHetznerKey, uploadHetznerKey, getPublicIp)
-	require.ErrorIs(t, expected, err)
+	require.Error(t, err)
 }
 
 func TestRunPreparationLogic_PropagatesReadGithubErrors(t *testing.T) {

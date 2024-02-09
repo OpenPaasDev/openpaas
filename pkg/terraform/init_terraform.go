@@ -19,7 +19,7 @@ func InitTf(ctx context.Context, workingDir string, terraformVersion string, std
 
 	// Set terraformVersion version if not provided
 	if terraformVersion == "" {
-		terraformVersion = "1.4.2"
+		terraformVersion = "1.7.3"
 	}
 
 	selectedVersion := version.Must(version.NewVersion(terraformVersion))
