@@ -2,7 +2,10 @@ package provider
 
 import (
 	"context"
+	_ "embed"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
@@ -25,26 +28,83 @@ type Playbook struct {
 	Vars map[string]string `yaml:"vars"`
 }
 
+//go:embed defaults/hardening-ubuntu-2204.yml
+var hardeningUbuntu string
+
+// add them in the order they need to be applied
+var defaultPlaybooks []string = []string{hardeningUbuntu}
+
 func (s *Ansible) Run(ctx context.Context, providerConfig interface{}, inventory *ansible.Inventory) error {
 	conf, err := asAnsibleConfig(providerConfig)
 	if err != nil {
 		return err
 	}
 	ansibleClient := s.makeClient(inventory.Path, conf.SudoUser)
+
+	corePlaybooks, err := prepareDefaultPlaybooks(defaultPlaybooks)
+	if err != nil {
+		return err
+	}
+
+	// runs all playbooks provided by the user after we have run the default ones
+	conf.Playbooks = append(corePlaybooks, conf.Playbooks...)
 	for _, playbook := range conf.Playbooks {
-		varsFile, err := generateVarsFile(playbook.Vars, conf.GlobalVars)
-		if err != nil {
-			return err
-		}
-		if varsFile != "" {
-			defer os.Remove(varsFile) //nolint
-		}
-		err = ansibleClient.Run(playbook.Name, varsFile)
+		err = s.runPlaybook(playbook, conf, ansibleClient)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
+}
+
+func (s *Ansible) runPlaybook(playbook Playbook, conf *AnsibleConfig, ansibleClient ansible.Client) error {
+	varsFile, err := generateVarsFile(playbook.Vars, conf.GlobalVars)
+	if err != nil {
+		return err
+	}
+	if varsFile != "" {
+		defer os.Remove(varsFile) //nolint
+	}
+	err = ansibleClient.Run(playbook.Name, varsFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// prepareDefaultPlaybooks runs the default playbooks in the `defaultPlaybooks` slice, in order
+func prepareDefaultPlaybooks(playbooks []string) ([]Playbook, error) {
+	var ymlFiles []Playbook
+	// first create temporal files for the default playbooks
+	for _, playbookContent := range playbooks {
+		// Create a temporary file
+		tempFile, err := os.CreateTemp("", "default-playbook-*.yml")
+		defer tempFile.Close() //nolint
+		if err != nil {
+			fmt.Printf("Error creating temp file %s: %s\n", tempFile.Name(), err)
+			return nil, err
+		}
+
+		// Write the content to the temporary file
+		_, err = tempFile.WriteString(playbookContent)
+		if err != nil {
+			fmt.Printf("Error writing to temp file %s: %s\n", tempFile.Name(), err)
+			return nil, err
+		}
+
+		// Get the absolute path of the temporary file
+		absPath, err := filepath.Abs(tempFile.Name())
+		if err != nil {
+			fmt.Printf("Error getting absolute path to temp file %s: %s\n", tempFile.Name(), err)
+			return nil, err
+		}
+
+		// Store the absolute path in the slice
+		ymlFiles = append(ymlFiles, Playbook{Name: absPath, Vars: map[string]string{}})
+	}
+
+	return ymlFiles, nil
 }
 
 func asAnsibleConfig(providerConfig interface{}) (*AnsibleConfig, error) {

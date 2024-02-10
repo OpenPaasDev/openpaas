@@ -1,0 +1,115 @@
+---
+- name: Ubuntu 22.04 Hardening
+  hosts: all
+  become: true
+  gather_facts: yes
+
+  tasks:
+    - name: Apply hardening if OS is Ubuntu 22.04
+      block:
+        - name: Update and upgrade all packages to the latest version
+          ansible.builtin.apt:
+            upgrade: dist
+            update_cache: yes
+            cache_valid_time: 3600
+
+        # UFW
+        - name: Ensure UFW is installed
+          ansible.builtin.apt:
+            name: ufw
+            state: present
+        - name: Enable UFW
+          ansible.builtin.ufw:
+            state: enabled
+            policy: deny
+            direction: incoming
+        - name: Allow SSH in UFW
+          ansible.builtin.ufw:
+            rule: allow
+            name: OpenSSH
+
+        # SSH
+        - name: Secure SSH Configuration
+          ansible.builtin.lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "{{ item.regexp }}"
+            line: "{{ item.line }}"
+          with_items:
+            # - { regexp: "^#?Port", line: "Port 2222" }
+            # - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
+            - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
+            - { regexp: "^#?X11Forwarding", line: "X11Forwarding no" }
+            - { regexp: "^#?MaxAuthTries", line: "MaxAuthTries 6" }
+            - { regexp: "^#?ClientAliveInterval", line: "ClientAliveInterval 300" }
+            - { regexp: "^#?ClientAliveCountMax", line: "ClientAliveCountMax 3" }
+            - { regexp: "^#?AllowTcpForwarding", line: "AllowTcpForwarding no" }
+            - { regexp: "^#?AllowAgentForwarding", line: "AllowAgentForwarding no" }
+            - { regexp: "^#?AuthorizedKeysFile", line: "AuthorizedKeysFile .ssh/authorized_keys" }
+          notify: restart ssh
+        #Fail2Ban
+        - name: Install fail2ban
+          ansible.builtin.apt:
+            name: fail2ban
+            state: present
+
+        - name: Ensure fail2ban is running and enabled
+          ansible.builtin.service:
+            name: fail2ban
+            state: started
+            enabled: yes
+
+        - name: Deploy custom fail2ban jail configuration
+          ansible.builtin.copy:
+            dest: /etc/fail2ban/jail.local
+            content: |
+              [DEFAULT]
+              bantime = 1h
+              findtime = 10m
+              maxretry = 6
+              backend = auto
+              banaction = ufw
+              
+              [sshd]
+              enabled = true
+              port    = ssh
+              filter  = sshd
+              logpath = /var/log/auth.log
+            owner: root
+            group: root
+            mode: '0644'
+          notify: restart fail2ban
+
+        # Security updates using the default configuration
+        # Relevant files:
+        # - /etc/apt/apt.conf.d/50unattended-upgrades
+        # - /etc/apt/apt.conf.d/20auto-upgrades
+        - name: Install unattended-upgrades package
+          ansible.builtin.apt:
+            name: unattended-upgrades
+            state: present
+
+        # Other
+        - name: Remove unnecessary packages
+          ansible.builtin.apt:
+            name: "{{ item }}"
+            state: absent
+          loop:
+            - telnet
+            - nis
+            - rsh-client
+            - rsh-redone-client
+
+      # condition for the block
+      when: hostvars[inventory_hostname]['extra_vars']['os'] == 'ubuntu-22.04'
+
+
+  handlers:
+    - name: restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: restart fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted

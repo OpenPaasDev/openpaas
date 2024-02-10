@@ -18,6 +18,7 @@ locals {
     value.name => {
       count  = value.num,
       subnet = "${i}", group = i, server_type = value.instance_type, lb_target = value.lb_target,
+      image = value.image,
       volumes = value.volumes
     }
   }
@@ -33,6 +34,7 @@ locals {
         lb_target   = value.lb_target
         server_type = value.server_type
         volumes     = value.volumes
+        image       = value.image
       }
     ]
   ])
