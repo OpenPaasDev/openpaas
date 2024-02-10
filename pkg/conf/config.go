@@ -25,6 +25,7 @@ type ServerGroup struct {
 	Volumes      []Volume `yaml:"volumes"`
 	LbTarget     bool     `yaml:"lb_target"`
 	Aliases      []string `yaml:"aliases"`
+	Image        string   `yaml:"os_image"`
 }
 
 type Volume struct {

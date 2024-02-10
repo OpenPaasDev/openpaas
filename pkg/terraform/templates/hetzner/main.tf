@@ -128,7 +128,7 @@ resource "hcloud_firewall_attachment" "fw_ref" {
 resource "hcloud_server" "server_node" {
   for_each           = { for entry in local.servers : "${entry.name}" => entry }
   name               = each.value.name
-  image              = "ubuntu-22.04"
+  image              = each.value.image
   server_type        = each.value.server_type
   location           = var.location
   placement_group_id = hcloud_placement_group.placement_group[each.value.group].id
@@ -142,7 +142,8 @@ resource "hcloud_server" "server_node" {
   ]
 
   labels = {
-    "group" = each.value.group_name
+    "group" = each.value.group_name,
+    "os" = each.value.image
   }
 
   ssh_keys = [for id in var.ssh_keys : id]
@@ -249,6 +250,7 @@ output "servers" {
         private_ip = "${server.private_ip}",
         server_id  = node.id
         group      = node.labels["group"]
+        image      = "${node.image}"
       } if server.name == node.name
     ]
   ])
