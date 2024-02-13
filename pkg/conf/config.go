@@ -13,10 +13,16 @@ type Config struct {
 	DC                  string                 `yaml:"dc_name"`
 	BaseDir             string                 `yaml:"base_dir"`
 	OrgName             string                 `yaml:"org_name"`
+	TfState             TerraformState         `yaml:"terraform_state"`
 	Providers           map[string]interface{} `yaml:"providers"`
 	CloudProviderConfig CloudProvider          `yaml:"cloud_provider_config"`
 	ServerGroups        map[string]ServerGroup `yaml:"server_groups"`
 	Services            map[string]interface{} `yaml:"services"`
+}
+
+type TerraformState struct {
+	Backend string            `yaml:"backend"`
+	Config  map[string]string `yaml:"config"`
 }
 
 type ServerGroup struct {

@@ -20,6 +20,15 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, "hetzner", conf.CloudProviderConfig.Provider)
 	assert.Equal(t, []string{"wfaler"}, conf.CloudProviderConfig.GithubIds)
 
+	assert.Equal(t, "s3", conf.TfState.Backend)
+	expected := map[string]string{"endpoint": "endpoint_to_s3_compatible_storage",
+		"bucket":     "bucket_name",
+		"region":     "auto",
+		"access_key": "your_access_key",
+		"secret_key": "your_secret_key",
+	}
+	assert.Equal(t, expected, conf.TfState.Config)
+
 	assert.Len(t, conf.ServerGroups, 2)
 	assert.Equal(t, "cpx31", conf.ServerGroups["clients"].InstanceType)
 	assert.Equal(t, 2, conf.ServerGroups["clients"].Num)
