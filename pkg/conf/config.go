@@ -13,10 +13,16 @@ type Config struct {
 	DC                  string                 `yaml:"dc_name"`
 	BaseDir             string                 `yaml:"base_dir"`
 	OrgName             string                 `yaml:"org_name"`
+	TfState             TerraformState         `yaml:"terraform_state"`
 	Providers           map[string]interface{} `yaml:"providers"`
 	CloudProviderConfig CloudProvider          `yaml:"cloud_provider_config"`
 	ServerGroups        map[string]ServerGroup `yaml:"server_groups"`
 	Services            map[string]interface{} `yaml:"services"`
+}
+
+type TerraformState struct {
+	Backend string            `yaml:"backend"`
+	Config  map[string]string `yaml:"config"`
 }
 
 type ServerGroup struct {
@@ -77,10 +83,25 @@ func Load(file string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// replace any env vars in the Tf State config with their values
+	config.TfState = updateTerraformStateVarsConfig(config.TfState)
+
 	return &config, nil
 }
 
 func LoadTFExecVars() *tfexec.VarOption {
 	token := os.Getenv("HETZNER_TOKEN")
 	return tfexec.Var(fmt.Sprintf("hcloud_token=%s", token))
+}
+
+func updateTerraformStateVarsConfig(tfState TerraformState) TerraformState {
+	for key, value := range tfState.Config {
+		envValue, exists := os.LookupEnv(value)
+		// If the environment variable exists and is not an empty string, replace the value for that key in the map
+		if exists && envValue != "" {
+			tfState.Config[key] = envValue
+		}
+	}
+	return tfState
 }

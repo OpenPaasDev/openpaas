@@ -2,6 +2,15 @@ dc_name: hetzner
 base_dir: config
 org_name: chaordic
 
+terraform_state:
+  backend: s3 # s3 or local
+  config:
+    endpoint: endpoint_to_s3_compatible_storage
+    bucket: bucket_name
+    region: auto
+    access_key: hardcoded_or_env_var
+    secret_key: ENV_SECRET_ACCESS_KEY
+
 server_groups:
   server:
     num: 3
