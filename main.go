@@ -122,7 +122,7 @@ func syncCmd() *cobra.Command {
 
 func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
 	cmd.Flags().StringVarP(file, "config.file", "f", "./config.yaml", "OpenPaaS configuration file to use")
-	cmd.Flags().StringVarP(terraformVersion, "terraform.version", "t", "1.7.2", "Terraform version to use")
+	cmd.Flags().StringVarP(terraformVersion, "terraform.version", "t", "1.7.3", "Terraform version to use")
 }
 
 func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
