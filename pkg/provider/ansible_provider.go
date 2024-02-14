@@ -31,8 +31,11 @@ type Playbook struct {
 //go:embed defaults/hardening-ubuntu-2204.yml
 var hardeningUbuntu string
 
+//go:embed defaults/mount-volumes.yml
+var upgradeAndMountUbuntu string
+
 // add them in the order they need to be applied
-var defaultPlaybooks []string = []string{hardeningUbuntu}
+var defaultPlaybooks []string = []string{hardeningUbuntu, upgradeAndMountUbuntu}
 
 func (s *Ansible) Run(ctx context.Context, providerConfig interface{}, inventory *ansible.Inventory) error {
 	conf, err := asAnsibleConfig(providerConfig)

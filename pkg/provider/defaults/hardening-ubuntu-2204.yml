@@ -7,6 +7,11 @@
   tasks:
     - name: Apply hardening if OS is Ubuntu 22.04
       block:
+        - name: Update all packages to the latest version
+          apt:
+            update_cache: yes
+            upgrade: dist
+            cache_valid_time: 3600 # Optional: cache valid time in seconds
         - name: Update and upgrade all packages to the latest version
           ansible.builtin.apt:
             upgrade: dist
