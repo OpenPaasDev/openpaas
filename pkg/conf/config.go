@@ -83,10 +83,25 @@ func Load(file string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// replace any env vars in the Tf State config with their values
+	config.TfState = updateTerraformStateVarsConfig(config.TfState)
+
 	return &config, nil
 }
 
 func LoadTFExecVars() *tfexec.VarOption {
 	token := os.Getenv("HETZNER_TOKEN")
 	return tfexec.Var(fmt.Sprintf("hcloud_token=%s", token))
+}
+
+func updateTerraformStateVarsConfig(tfState TerraformState) TerraformState {
+	for key, value := range tfState.Config {
+		envValue, exists := os.LookupEnv(value)
+		// If the environment variable exists and is not an empty string, replace the value for that key in the map
+		if exists && envValue != "" {
+			tfState.Config[key] = envValue
+		}
+	}
+	return tfState
 }

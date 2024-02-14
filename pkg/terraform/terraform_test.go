@@ -178,8 +178,8 @@ func TestGenerateTerraformWithS3(t *testing.T) {
 		"endpoint":   cty.StringVal("endpoint_to_s3_compatible_storage"),
 		"bucket":     cty.StringVal("bucket_name"),
 		"region":     cty.StringVal("auto"),
-		"access_key": cty.StringVal("your_access_key"),
-		"secret_key": cty.StringVal("your_secret_key"),
+		"access_key": cty.StringVal("env_var_access_key"),
+		"secret_key": cty.StringVal("env_var_secret_key"),
 		"key":        cty.StringVal("openpaas/terraform.tfstate"),
 	}
 

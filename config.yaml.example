@@ -8,8 +8,8 @@ terraform_state:
     endpoint: endpoint_to_s3_compatible_storage
     bucket: bucket_name
     region: auto
-    access_key: your_access_key
-    secret_key: your_secret_key
+    access_key: hardcoded_or_env_var
+    secret_key: ENV_SECRET_ACCESS_KEY
 
 server_groups:
   server:
