@@ -33,13 +33,22 @@ func GenerateTerraform(config *conf.Config) error {
 		return fmt.Errorf("%s is not a supported cloud provider", config.CloudProviderConfig.Provider)
 	}
 
+	tmplMain, e := template.New("tf-main").Parse(tfSettings.Main)
+	if e != nil {
+		return e
+	}
+	var bufMain bytes.Buffer
+	err := tmplMain.Execute(&bufMain, config)
+	if err != nil {
+		return err
+	}
+
 	tmplVars, e := template.New("tf-vars").Parse(tfSettings.Vars)
 	if e != nil {
 		return e
 	}
 	var bufVars bytes.Buffer
-
-	err := tmplVars.Execute(&bufVars, config)
+	err = tmplVars.Execute(&bufVars, config)
 	if err != nil {
 		return err
 	}
@@ -54,7 +63,7 @@ func GenerateTerraform(config *conf.Config) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Clean(filepath.Join(folder, "main.tf")), []byte(hetznerMain), 0600)
+	err = os.WriteFile(filepath.Clean(filepath.Join(folder, "main.tf")), bufMain.Bytes(), 0600)
 	if err != nil {
 		return err
 	}

@@ -27,6 +27,22 @@ type Variable struct {
 	Sensitive bool           `hcl:"sensitive,optional"`
 }
 
+// parse the main.tf file to extract data for testing
+type TfMain struct {
+	Terraform []Terraform `hcl:"terraform,block"`
+	Raw       hcl.Body    `hcl:",remain"`
+}
+
+type Terraform struct {
+	Backend []Backend `hcl:"backend,block"`
+	Raw     hcl.Body  `hcl:",remain"`
+}
+
+type Backend struct {
+	Name   string         `hcl:"name,label"`
+	Config hcl.Attributes `hcl:",remain"` // Dynamic configuration attributes
+}
+
 func TestGenerateTerraform(t *testing.T) {
 	config, err := conf.Load("../testdata/config.yaml")
 	require.NoError(t, err)
@@ -83,4 +99,99 @@ func TestGenerateTerraform(t *testing.T) {
 	}
 
 	assert.Equal(t, len(expectedMap), len(vars))
+}
+
+func TestGenerateTerraformWithLocal(t *testing.T) {
+	config, err := conf.Load("../testdata/config.yaml")
+	require.NoError(t, err)
+
+	folder := util.RandString(8)
+	config.BaseDir = folder
+	defer func() {
+		e := os.RemoveAll(filepath.Clean(folder))
+		require.NoError(t, e)
+	}()
+
+	// set the backend to local before generating the terraform files
+	config.TfState.Backend = "local"
+	err = GenerateTerraform(config)
+	require.NoError(t, err)
+
+	parser := hclparse.NewParser()
+
+	f, parseDiags := parser.ParseHCLFile(filepath.Clean(filepath.Join(folder, "terraform", "main.tf")))
+	assert.False(t, parseDiags.HasErrors())
+
+	var tfConf TfMain
+	decodeDiags := gohcl.DecodeBody(f.Body, nil, &tfConf)
+	assert.False(t, decodeDiags.HasErrors())
+	assert.Empty(t, tfConf.Terraform[0].Backend)
+}
+
+func TestGenerateTerraformWithS3(t *testing.T) {
+	config, err := conf.Load("../testdata/config.yaml")
+	require.NoError(t, err)
+
+	folder := util.RandString(8)
+	config.BaseDir = folder
+	defer func() {
+		e := os.RemoveAll(filepath.Clean(folder))
+		require.NoError(t, e)
+	}()
+
+	// load a remote s3 config from the test data
+	err = GenerateTerraform(config)
+	require.NoError(t, err)
+
+	parser := hclparse.NewParser()
+
+	tfVars, parseDiags := parser.ParseHCLFile(filepath.Clean(filepath.Join(folder, "terraform", "vars.tf")))
+	assert.False(t, parseDiags.HasErrors())
+
+	f, parseDiags := parser.ParseHCLFile(filepath.Clean(filepath.Join(folder, "terraform", "main.tf")))
+	assert.False(t, parseDiags.HasErrors())
+
+	// generate a context based on the vars
+	var varsConf tfConfig
+	decodeDiags := gohcl.DecodeBody(tfVars.Body, nil, &varsConf)
+	assert.False(t, decodeDiags.HasErrors())
+
+	ctx := &hcl.EvalContext{
+		Variables: make(map[string]cty.Value),
+	}
+	for _, value := range varsConf.Variable {
+		var defaultValue cty.Value
+		if value.Default != nil {
+			defaultValue = *value.Default
+		} else {
+			defaultValue = cty.StringVal("null pointer")
+		}
+		ctx.Variables[value.Name] = defaultValue
+	}
+
+	// parse main.tf into the struct
+	var tfConf TfMain
+	decodeDiags = gohcl.DecodeBody(f.Body, nil, &tfConf)
+	assert.False(t, decodeDiags.HasErrors())
+
+	vars := map[string]cty.Value{
+		"endpoint":   cty.StringVal("endpoint_to_s3_compatible_storage"),
+		"bucket":     cty.StringVal("bucket_name"),
+		"region":     cty.StringVal("auto"),
+		"access_key": cty.StringVal("your_access_key"),
+		"secret_key": cty.StringVal("your_secret_key"),
+		"key":        cty.StringVal("openpaas/terraform.tfstate"),
+	}
+
+	for key, attr := range tfConf.Terraform[0].Backend[0].Config {
+		var value cty.Value
+		value, _ = attr.Expr.Value(ctx)
+
+		expected, ok := vars[key]
+		// only check keys we are testing for
+		if ok {
+			assert.Equal(t, expected.Type(), value.Type())
+			assert.Equal(t, expected, value)
+		}
+	}
 }

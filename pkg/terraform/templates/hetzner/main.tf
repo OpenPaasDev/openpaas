@@ -5,7 +5,24 @@ terraform {
       version = "1.44.1"
     }
   }
+  {{if eq .TfState.Backend "s3"}}
+  backend "s3" {
+    endpoints                   = { s3 = "{{.TfState.Config.endpoint }}" }
+    bucket                      = "{{.TfState.Config.bucket }}"
+    key                         = "openpaas/terraform.tfstate"
+    region                      = "{{.TfState.Config.region }}"
+    access_key                  = "{{.TfState.Config.access_key }}"
+    secret_key                  = "{{.TfState.Config.secret_key }}"
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
+    skip_s3_checksum = true
+    force_path_style            = true
 }
+  {{ end }}
+}
+
 # Configure the Hetzner Cloud Provider
 provider "hcloud" {
   token = var.hcloud_token
