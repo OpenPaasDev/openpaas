@@ -1,0 +1,43 @@
+---
+- name: Mount volumes
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure group exists
+      group:
+        name: "{{ item.owner }}"
+        state: present
+      loop: "{{ hostvars[inventory_hostname].mounts | default([]) }}"
+      when: hostvars[inventory_hostname].mounts is defined
+      become: yes
+      loop_control:
+        label: "{{ item.owner }}"
+    - name: Ensure user and group exist
+      user:
+        name: "{{ item.owner }}"
+        group: "{{ item.owner }}"
+        state: present
+        createhome: yes 
+      loop: "{{ hostvars[inventory_hostname].mounts | default([]) }}"
+      when: hostvars[inventory_hostname].mounts is defined
+      become: yes
+    - name: Ensure mount points exist and have correct ownership
+      file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner }}"
+        group: "{{ item.owner }}"
+      with_items: "{{ hostvars[inventory_hostname].mounts }}"
+      when: hostvars[inventory_hostname].mounts is defined
+      become: yes
+
+    - name: Mount filesystems
+      mount:
+        path: "{{ item.path }}"
+        src: "{{ item.mount_path }}"
+        fstype: none  # For bind mounts, fstype is 'none'
+        opts: bind  # Specify 'bind' to indicate a bind mount
+        state: mounted
+      with_items: "{{ hostvars[inventory_hostname].mounts }}"
+      when: hostvars[inventory_hostname].mounts is defined
+      become: yes
