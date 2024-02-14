@@ -63,5 +63,6 @@ func TestGenerateInventory(t *testing.T) {
 	assert.Equal(t, "venue-servers-1", host.HostName)
 	assert.Equal(t, "10.0.1.2", host.PrivateIP)
 	assert.Equal(t, "138.201.186.150", host.PublicIP)
+	assert.Equal(t, map[string]string{"datacenter": "hetzner", "os": "ubuntu-22.04"}, host.ExtraVars)
 
 }

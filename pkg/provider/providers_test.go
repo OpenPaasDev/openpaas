@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
@@ -51,7 +52,7 @@ func TestGenerateAnsibleVarsFile(t *testing.T) {
 func TestAnsibleProvider(t *testing.T) {
 	mockAnsible := &MockAnsibleClient{
 		RunFunc: func(playbook string, varsFile string) error {
-			if playbook != "playbooks/k3s.yml" && playbook != "playbooks/postgres.yml" {
+			if playbook != "playbooks/k3s.yml" && playbook != "playbooks/postgres.yml" && !strings.Contains(playbook, "default-playbook-") {
 				return fmt.Errorf("unexpected playbook: %s", playbook)
 			}
 			assert.FileExists(t, varsFile) //nolint
@@ -69,13 +70,13 @@ func TestAnsibleProvider(t *testing.T) {
 	inf := cnf.Providers["ansible"]
 	err = ansibleProvider.Run(context.Background(), inf, inv)
 	require.NoError(t, err)
-	assert.Len(t, mockAnsible.RunCalls(), 2)
+	assert.Len(t, mockAnsible.RunCalls(), 2+len(defaultPlaybooks))
 }
 
 func TestRunProviders(t *testing.T) {
 	mockAnsible := &MockAnsibleClient{
 		RunFunc: func(playbook string, varsFile string) error {
-			if playbook != "playbooks/k3s.yml" && playbook != "playbooks/postgres.yml" {
+			if playbook != "playbooks/k3s.yml" && playbook != "playbooks/postgres.yml" && !strings.Contains(playbook, "default-playbook-") {
 				return fmt.Errorf("unexpected playbook: %s", playbook)
 			}
 			assert.FileExists(t, varsFile) //nolint
@@ -96,5 +97,18 @@ func TestRunProviders(t *testing.T) {
 	require.NoError(t, err)
 	err = runner.RunAll(context.Background(), cnf, inv)
 	require.NoError(t, err)
-	assert.Len(t, mockAnsible.RunCalls(), 2)
+	assert.Len(t, mockAnsible.RunCalls(), 2+len(defaultPlaybooks))
+}
+
+func TestPrepareDefaultPlaybooks(t *testing.T) {
+	testPlaybooks := []string{"playbookContent1", "playbookContent2", "playbookContent3"}
+	playbooks, err := prepareDefaultPlaybooks(testPlaybooks)
+	require.NoError(t, err)
+	assert.Len(t, playbooks, 3)
+	for _, pb := range playbooks {
+		assert.FileExists(t, pb.Name) //nolint
+		assert.Contains(t, pb.Name, "default-playbook-")
+		assert.Contains(t, pb.Name, ".yml")
+		assert.Equal(t, map[string]string{}, pb.Vars)
+	}
 }

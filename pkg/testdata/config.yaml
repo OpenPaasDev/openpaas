@@ -16,6 +16,7 @@ server_groups:
   servers:
     num: 3
     instance_type: cx21
+    os_image: ubuntu-22.04
     volumes: 
     - name: "data_vol"
       path: /opt/nomad_server_data
@@ -26,6 +27,7 @@ server_groups:
   clients:
     num: 2
     instance_type: cpx31
+    os_image: ubuntu-22.04
 providers:
   ansible:
     sudo_user: root

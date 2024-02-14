@@ -42,6 +42,7 @@ type Host struct {
 	HostName  string `json:"host_name"`
 	PrivateIP string `json:"private_ip"`
 	ServerID  string `json:"server_id"`
+	Image     string `json:"image"`
 }
 
 type All struct {
@@ -193,6 +194,7 @@ func GenerateInventory(config *conf.Config) (*Inventory, error) {
 			ID:        v.ServerID,
 			ExtraVars: map[string]string{
 				"datacenter": config.DC,
+				"os":         v.Image,
 			},
 		}
 

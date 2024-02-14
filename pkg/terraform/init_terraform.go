@@ -17,11 +17,6 @@ func InitTf(ctx context.Context, workingDir string, terraformVersion string, std
 
 	i := install.NewInstaller()
 
-	// Set terraformVersion version if not provided
-	if terraformVersion == "" {
-		terraformVersion = "1.7.3"
-	}
-
 	selectedVersion := version.Must(version.NewVersion(terraformVersion))
 
 	execPath, err := i.Ensure(ctx, []src.Source{

@@ -11,6 +11,7 @@ variable "server_groups" {
     instance_type = "{{ $value.InstanceType}}"
     num = {{ $value.Num }}
     lb_target = {{ $value.LbTarget}}
+    image = "{{ $value.Image }}"
     volumes = [{{ range $key, $value := $value.Volumes}}
      {
       name = "{{ $value.Name }}"
