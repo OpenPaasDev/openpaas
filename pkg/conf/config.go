@@ -66,6 +66,7 @@ type HetznerSettings struct {
 	Location         string               `yaml:"location"`
 	ResourceNames    HetznerResourceNames `yaml:"resource_names"`
 	LoadBalancerType string               `yaml:"load_balancer_type"`
+	Context          string               `yaml:"context"`
 }
 
 type TFVarsConfig struct {
@@ -84,7 +85,13 @@ func Load(file string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	subnetIDs := make(map[int]bool)
+	for _, group := range config.ServerGroups {
+		if _, ok := subnetIDs[group.SubnetID]; ok {
+			return nil, fmt.Errorf("subnet id %d is duplicated", group.SubnetID)
+		}
+		subnetIDs[group.SubnetID] = true
+	}
 	// replace any env vars in the Tf State config with their values
 	config.TfState = updateTerraformStateVarsConfig(config.TfState)
 

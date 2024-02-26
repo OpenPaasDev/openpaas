@@ -49,6 +49,10 @@ func runPreparationLogic(ctx context.Context,
 	uploadHetznerKey func(string, string) error,
 	getPublicIp func(context.Context) (string, error),
 ) error {
+	err := setHetznerContext(conf.CloudProviderConfig)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error setting Hetzner context: %v\n", err))
+	}
 	keysInHetzner, err := getHetznerKeys()
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error fetching keys from Hetzner: %v\n", err))
@@ -130,6 +134,15 @@ func fetchHetznerKeys() ([]HetznerSSHKey, error) {
 		return nil, err
 	}
 	return keys, nil
+}
+func setHetznerContext(config conf.CloudProvider) error {
+	hetznerCtx, ok := config.ProviderSettings["context"].(string)
+	if !ok {
+		fmt.Println("Warning: no hetzner context found in provider settings, using currently set context")
+		return nil
+	}
+	_, err := exec.Command("hcloud", "context", "use", hetznerCtx).Output() //nolint
+	return err
 }
 
 func eraseKeyFromHetzner(key HetznerSSHKey) error {
