@@ -32,6 +32,7 @@ type ServerGroup struct {
 	LbTarget     bool     `yaml:"lb_target"`
 	Aliases      []string `yaml:"aliases"`
 	Image        string   `yaml:"os_image"`
+	SubnetID     int      `yaml:"subnet_id"`
 }
 
 type Volume struct {

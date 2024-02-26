@@ -12,8 +12,16 @@ terraform_state:
     secret_key: ENV_SECRET_ACCESS_KEY
 
 server_groups:
+  agent:
+    num: 2
+    # subnet_id should be a unique numerical value per server group.
+    subnet_id: 0 # load balancers get put in subnet_id 0, so practical to put lb_targets in same subnet
+    lb_target: true # should probably be is_lb_target instead, more natural
+    instance_type: cx21
+    os_image: ubuntu-22.04
   server:
     num: 3
+    subnet_id: 1
     lb_target: false
     instance_type: cx21
     os_image: ubuntu-22.04
@@ -22,12 +30,6 @@ server_groups:
  #     path: /opt/nomad_server_data
  #     size: 20
  #     owner: www-data
-  agent:
-    num: 2
-    lb_target: true # should probably be is_lb_target instead, more natural
-    instance_type: cx21
-    os_image: ubuntu-22.04
-
 providers:
   ansible:
     sudo_user: root
