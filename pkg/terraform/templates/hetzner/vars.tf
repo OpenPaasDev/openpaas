@@ -9,6 +9,7 @@ variable "server_groups" {
    {
     name = "{{ $key }}"
     instance_type = "{{ $value.InstanceType}}"
+    subnet_id = "{{ $value.SubnetID}}"
     num = {{ $value.Num }}
     lb_target = {{ $value.LbTarget}}
     image = "{{ $value.Image }}"

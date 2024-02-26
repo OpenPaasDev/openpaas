@@ -14,6 +14,7 @@ terraform_state:
 
 server_groups:
   servers:
+    subnet_id: 0
     num: 3
     instance_type: cx21
     os_image: ubuntu-22.04
@@ -26,6 +27,7 @@ server_groups:
       - consul
   clients:
     num: 2
+    subnet_id: 1
     instance_type: cpx31
     os_image: ubuntu-22.04
 providers:

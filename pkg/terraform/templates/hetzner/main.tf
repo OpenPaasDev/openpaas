@@ -17,7 +17,7 @@ terraform {
     skip_metadata_api_check     = true
     skip_region_validation      = true
     skip_requesting_account_id  = true
-    skip_s3_checksum = true
+    skip_s3_checksum            = true
     force_path_style            = true
 }
   {{ end }}
@@ -34,7 +34,7 @@ locals {
     for i, value in var.server_groups :
     value.name => {
       count  = value.num,
-      subnet = "${i}", group = i, server_type = value.instance_type, lb_target = value.lb_target,
+      subnet = "${value.subnet_id}", group = value.subnet_id, server_type = value.instance_type, lb_target = value.lb_target,
       image = value.image,
       volumes = value.volumes
     }
