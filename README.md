@@ -20,7 +20,3 @@ Ties together Terraform, Ansible and Runtime execution of commands (local) to cr
 ## TODO
 
 - [ ] add documentation to parts of the code (I need to work more with it)
-- [ ] using systemctl, setup nginx, upload/download binary, upload service, restart service
-- [ ] hetzner minimum viable config (2 boxes, 1 load balancer, 1 postgres, private network)
-- [ ] postgres to master/slave
-- [ ] o11y at infra level (grafana, tempo, loki, successor-to-prometheus) as a playbook
