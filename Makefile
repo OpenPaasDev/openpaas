@@ -26,3 +26,7 @@ destroy:
 .PHONY: docs
 docs:
 	pkgsite
+
+.PHONY: init
+init:
+	go run main.go init

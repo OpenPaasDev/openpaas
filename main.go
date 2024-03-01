@@ -41,10 +41,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
+	"github.com/OpenPaasDev/openpaas/pkg/util"
 	"github.com/spf13/cobra"
 
 	"github.com/OpenPaasDev/openpaas/pkg/ansible"
@@ -53,6 +56,12 @@ import (
 	"github.com/OpenPaasDev/openpaas/pkg/provider"
 	"github.com/OpenPaasDev/openpaas/pkg/terraform"
 )
+
+// constants for versions of apps to install as dependencies
+// we don't have a version for Ansible as it is installed via brew or pip
+
+const HcloudVersion = "1.42.0"
+const TerraformVersion = "1.7.4"
 
 func main() {
 
@@ -85,6 +94,7 @@ Currently, it defaults to Hetzner, but it can easily be expanded to target other
 	}
 
 	rootCmd.AddCommand(syncCmd())
+	rootCmd.AddCommand(initCmd())
 	err = rootCmd.Execute()
 	if err != nil {
 		fmt.Println(err)
@@ -115,14 +125,37 @@ func syncCmd() *cobra.Command {
 		},
 	}
 
-	addFlags(cmd, &configFile, &terraformVersion)
+	cmd.Flags().StringVarP(&configFile, "config.file", "f", "./config.yaml", "OpenPaaS configuration file to use")
+	addTerraformFlag(cmd, &terraformVersion)
 
 	return cmd
 }
 
-func addFlags(cmd *cobra.Command, file *string, terraformVersion *string) {
-	cmd.Flags().StringVarP(file, "config.file", "f", "./config.yaml", "OpenPaaS configuration file to use")
-	cmd.Flags().StringVarP(terraformVersion, "terraform.version", "t", "1.7.3", "Terraform version to use")
+func addTerraformFlag(cmd *cobra.Command, terraformVersion *string) {
+	cmd.Flags().StringVarP(terraformVersion, "terraform.version", "t", TerraformVersion, "Terraform version to use")
+}
+
+func initCmd() *cobra.Command {
+	var terraformVersion string
+	var hcloudVersion string
+	cmd := &cobra.Command{
+		Use:   "init",
+		Short: "Install required dependencies for OpenPaaS",
+		Long:  `Install required dependencies for OpenPaaS. This includes tooling like Terraform and Ansible, plus any other required dependencies.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+			err := installDependencies(ctx, terraformVersion, hcloudVersion)
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			}
+		},
+	}
+
+	addTerraformFlag(cmd, &terraformVersion)
+	cmd.Flags().StringVar(&hcloudVersion, "hcloud.version", HcloudVersion, "Hcloud version to install")
+
+	return cmd
 }
 
 func initStack(ctx context.Context, file string, terraformVersion string) (*conf.Config, *ansible.Inventory, error) {
@@ -149,14 +182,14 @@ func initStack(ctx context.Context, file string, terraformVersion string) (*conf
 	return cnf, inventory, nil
 }
 
-func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion string) (*ansible.Inventory, error) {
+func initTerraform(ctx context.Context, cnf *conf.Config, terraformExecPath string) (*ansible.Inventory, error) {
 	err := terraform.GenerateTerraform(cnf)
 	if err != nil {
 		return nil, err
 	}
 
 	//TODO we initialise here and then again in line 175, is this needed? why?
-	tf, err := terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, os.Stdout, os.Stderr)
+	tf, err := terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformExecPath, os.Stdout, os.Stderr)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +210,7 @@ func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion strin
 		}
 	}()
 	// Terraform initialised again, this time with output to file f, to capture outputs as json
-	tf, err = terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformVersion, f, os.Stderr)
+	tf, err = terraform.InitTf(ctx, filepath.Join(cnf.BaseDir, "terraform"), terraformExecPath, f, os.Stderr)
 	if err != nil {
 		return nil, err
 	}
@@ -191,4 +224,93 @@ func initTerraform(ctx context.Context, cnf *conf.Config, terraformVersion strin
 		return nil, err
 	}
 	return inventory, nil
+}
+
+func installDependencies(ctx context.Context, terraformVersion string, hcloudVersion string) error {
+	if runtime.GOOS == "windows" {
+		fmt.Println("Error initialising dependencies: Windows OS not supported")
+		return errors.ErrUnsupported
+	}
+
+	_, err := terraform.GetTerraformExecutablePath(ctx, terraformVersion)
+	if err != nil {
+		return err
+	}
+
+	err = installAnsible()
+	if err != nil {
+		return err
+	}
+
+	err = installHcloud(ctx, hcloudVersion)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func installAnsible() error {
+	if !util.IsAnsibleInstalled() {
+		// Brew can also be installed in linux it seems :)
+		if util.IsBrewInstalled() {
+			fmt.Println("'ansible': Installing latest version available in brew")
+			err := util.RunCmd("brew", "install", "ansible")
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Printf("'ansible': Installing via pip")
+			if util.IsPipInstalled() {
+				err := util.RunCmd("pip", "install", "--user", "ansible")
+				if err != nil {
+					return err
+				}
+			} else {
+				return errors.New("'ansible': Error initialising dependencies: pip not installed. Please install pip or install ansible separately")
+			}
+		}
+		// verify ansible runs
+		if !util.IsAnsibleInstalled() {
+			return errors.New("Error initialising dependencies: ansible not installed")
+		}
+	}
+	return nil
+}
+
+func installHcloud(ctx context.Context, hcloudVersion string) error {
+	if !util.IsHCloudInstalled() {
+		// Brew can also be installed in linux it seems :)
+		if util.IsBrewInstalled() {
+			fmt.Println("'hcloud': Installing latest version available in brew")
+			err := util.RunCmd("brew", "install", "hcloud")
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Printf("'hcloud': Installing version %s from artefacts", hcloudVersion)
+			extension := "tar.gz"
+			destPath := "/usr/local/bin"
+			tempPath := "/tmp/hcloud.tar.gz"
+			system := runtime.GOOS
+			arch := runtime.GOARCH
+			urlTemplate := "https://github.com/hetznercloud/cli/releases/download/v%s/hcloud-%s-%s.%s"
+			downloadUrl := fmt.Sprintf(urlTemplate, hcloudVersion, system, arch, extension)
+
+			if err := util.DownloadFile(ctx, downloadUrl, tempPath); err != nil {
+				fmt.Println("Error downloading file:", err)
+				return err
+			}
+
+			if err := util.ExtractTarGz(tempPath, destPath); err != nil {
+				fmt.Println("Error extracting file:", err)
+				return err
+			}
+		}
+		// verify hcloud runs
+		if !util.IsHCloudInstalled() {
+			return errors.New("Error initialising dependencies: hcloud not installed")
+		}
+	}
+	return nil
 }
